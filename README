@@ -1,0 +1,14 @@
+How to build (client)
+=====================
+
+Make sure the git submodules are cloned (`git submodule update').
+
+Install CoffeScript (tested with 1.0.1) and run `cake build'.
+The `maikados.js' should be in your directory now.
+
+Hints for developers (client)
+=============================
+
+- use `cake autobuild' ;-)
+- use 2 whitespaces (soft tabs) for indentation in CoffeeScript, CSS and 4 whitespaces in HTML
+- use the coding style already there please

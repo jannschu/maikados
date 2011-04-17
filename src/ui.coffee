@@ -93,23 +93,21 @@ class UIField
         ry = @height * 0.5 * 0.6
         top = @height * (row + 0.49)
         
-        ellipseTop = @paper.ellipse(@width * (col + 0.5), top, rx, ry)
-        ellipseTop.attr(fill: "60-#{color}").attr(strokeAttr)
-        
         drawBottomEllipse = (topX, length, parent) =>
             left = @width * (col + (1 - 0.9) * 0.5)
             path = @paper.path("M#{left},#{topX} v#{length} " +
                 "a#{rx},#{ry} 0 0 0 #{@width * 0.9},0 v-#{length}Z")
             path.attr(fill: "15-#{color}").attr(strokeAttr)
-            parent.insertBefore(path)
             return path
         
         bottom = drawBottomEllipse top, @height * diff, ellipseTop
         
+        ellipseTop = @paper.ellipse(@width * (col + 0.5), top, rx, ry)
+        ellipseTop.attr(fill: "60-#{color}").attr(strokeAttr)
+        
         ellipseColor = @paper.ellipse(@width * (col + 0.5), top, rx, ry)
         bg = Raphael.getRGB(bg)
         ellipseColor.attr(fill: "r(.5,.6)#{colorMap[piece.getColorID()]}:5%-rgba(#{bg.r},#{bg.g},#{bg.b},0)", stroke: 'none', opacity: 0)
-        ellipseTop.insertBefore(ellipseColor)
         
         # dragon tooths
         r = (@width * 0.15 + @height * 0.15) / 2
@@ -131,7 +129,6 @@ class UIField
                 @paper.ellipse(x, y, r - r/5, r - r/20).
                     attr(stroke: 'none', fill: 'r(.5,.1)#ccc-#ccc', opacity: 0)
             )
-            lastBall.insertBefore ball
             lastBall = ball
         
         set.push(ellipseTop, bottom, ball)

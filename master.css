@@ -1,16 +1,74 @@
+/*
+ * This file is part of Maikados.
+ *
+ * Maikados is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Maikados is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Maikados.  If not, see <http://www.gnu.org/licenses/>.
+ */
 body {
   font-family: "Helvetica Neue", "Helvetica";
   background: #1B0F00;
   font-weight: 300;
   color: #C2CDEC;
+  font-size: 0.9em;
 }
 
-h1 {
+h1, h2, h3 {
   font-weight: 100;
   text-align: center;
 }
 
-div#game svg {
+a {
+  color: #FFE4E1;
+  text-decoration: none;
+  font-weight: 200;
+}
+
+a:hover { color: #FFCF8B; }
+
+#game {
   display: block;
+  width: 600px;
   margin: auto;
+}
+
+#game #about {
+  position: relative;
+  left: 100%;
+  top: -600px;
+  padding: 1em;
+  padding-top: 0;
+  width: 45%;
+  vertical-align: top;
+}
+
+footer {
+  font-size: 0.6em;
+  color: #808080;
+  text-align: center;
+}
+
+footer span.email {
+  font-style: italic;
+  color: #9A9A9A;
+}
+
+footer span.email:before { content: "<"; }
+footer span.email:after { content: ">"; }
+
+footer a {
+  position: fixed;
+  right: 1px;
+  bottom: 1px;
+  display: block;
+  opacity: 0.3;
 }

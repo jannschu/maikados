@@ -1,14 +1,52 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <!--
+          - This file is part of Maikados.
+          -
+          - Maikados is free software: you can redistribute it and/or modify
+          - it under the terms of the GNU General Public License as published by
+          - the Free Software Foundation, either version 3 of the License, or
+          - (at your option) any later version.
+          -
+          - Maikados is distributed in the hope that it will be useful,
+          - but WITHOUT ANY WARRANTY; without even the implied warranty of
+          - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+          - GNU General Public License for more details.
+          -
+          - You should have received a copy of the GNU General Public License
+          - along with Maikados.  If not, see <http://www.gnu.org/licenses/>.
+          -->
         <title>Maikados</title>
+        <meta http-equiv="X-UA-Compatible" content="chrome=1">
+        <meta charset="UTF-8">
+        <link rel="stylesheet" href="master.css" type="text/css" media="screen" charset="utf-8">
         <script type="text/javascript" charset="utf-8" src="lib/raphael/raphael-min.js"></script>
         <script type="text/javascript" charset="utf-8" src="https://ajax.googleapis.com/ajax/libs/jquery/1.5.2/jquery.min.js"></script>
         <script type="text/javascript" charset="utf-8" src="maikados.js"></script>
-        <link rel="stylesheet" href="master.css" type="text/css" media="screen" charset="utf-8">
     </head>
     <body>
         <h1>Maikados</h1>
-        <div id="game"></div>
+        <section id="game">
+            <article id="about">
+                <h2>Über…</h2>
+                <p>
+                    Maikados ist eine Brettspielumsetzung einer empfehlenswerten
+                    Vorlage. Es handelt sich um eine Multiplayervariante, die zum Testen
+                    von verschiedener Technologie entwickelt wurde. Daher wird ein
+                    Server benötigt. Den gesamten Source-Code gibt es auf
+                    <a href="http:github.com/jannschu/maikados/">GitHub</a>.
+                </p>
+                <p>
+                    Es handelt sich um eine Implementierung zu privaten
+                    Zwecken, da keine Rechte vorhanden sind.
+                </p>
+                <button id="startButton">Partie beginnen</button>
+            </article>
+        </section>
+        <footer>
+            <a href="http://www.fsf.org/"><img src="gplv3-88x31.png" alt="Lizenz GPLv3 Logo"></a>
+            Copyright (©) 2011 Jannik Schürg <span class="email">jannschu@gmail.com</span>
+        </footer>
     </body>
 </html>

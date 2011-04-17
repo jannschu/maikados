@@ -1,4 +1,22 @@
+###
+- This file is part of Maikados.
+-
+- Maikados is free software: you can redistribute it and/or modify
+- it under the terms of the GNU General Public License as published by
+- the Free Software Foundation, either version 3 of the License, or
+- (at your option) any later version.
+-
+- Maikados is distributed in the hope that it will be useful,
+- but WITHOUT ANY WARRANTY; without even the implied warranty of
+- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- GNU General Public License for more details.
+-
+- You should have received a copy of the GNU General Public License
+- along with Maikados.  If not, see <http://www.gnu.org/licenses/>.
+###
+
 class UIField
+    # TODO: full swap support (to be considered at drawing etc.)
     
     colorMap = [
         '#F00', '#744700','#FF8000', '#F3F000',
@@ -63,7 +81,7 @@ class UIField
     createPieceSet: (piece) ->
         row = piece.getRow()
         col = piece.getCol()
-        [bg, color] = if piece.getSide() is 0 then ['#1B1B1B', '#333-#1B1B1B'] else ['#FCFCFC', '#EEE-#FCFCFC']
+        [bg, color] = if piece.getSide() is 0 then ['#1B1B1B', '#333-#1B1B1B'] else ['#EEE', '#CCC-#EEE']
         strokeAttr =
             stroke: (if piece.getSide() is 0 then 'black' else '#737373'),
             'stroke-width': 1

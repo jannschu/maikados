@@ -1,6 +1,7 @@
 {application, maikados,
  [{description, "Multiplayer server for the Maikados game"},
   {vsn, "0.1"},
+  {agner, [{requires, ["socketio"]}]},
   {modules, [maikados_app]},
   {registered, []},
   {applications, [kernel, stdlib]},

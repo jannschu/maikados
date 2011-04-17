@@ -4,6 +4,3 @@
 [submodule "lib/socket.io"]
 	path = lib/socket.io
 	url = git://github.com/LearnBoost/Socket.IO.git
-[submodule "server/priv/socket.io-erlang"]
-	path = server/priv/socket.io-erlang
-	url = git://github.com/yrashk/socket.io-erlang.git

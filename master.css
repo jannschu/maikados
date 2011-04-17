@@ -38,7 +38,9 @@ a:hover { color: #FFCF8B; }
 #game {
   display: block;
   width: 600px;
+  height: 600px;
   margin: auto;
+  margin-bottom: 4em;
 }
 
 #game #about {
@@ -66,9 +68,8 @@ footer span.email:before { content: "<"; }
 footer span.email:after { content: ">"; }
 
 footer a {
-  position: fixed;
-  right: 1px;
-  bottom: 1px;
   display: block;
+  margin: 0.5em;
+  text-align: center;
   opacity: 0.3;
 }

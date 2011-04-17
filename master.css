@@ -1,0 +1,16 @@
+body {
+  font-family: "Helvetica Neue", "Helvetica";
+  background: #1B0F00;
+  font-weight: 300;
+  color: #C2CDEC;
+}
+
+h1 {
+  font-weight: 100;
+  text-align: center;
+}
+
+div#game svg {
+  display: block;
+  margin: auto;
+}

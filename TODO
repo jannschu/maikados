@@ -1,0 +1,66 @@
+Client
+======
+
+HINWEIS: Beim Benutzen von Plugins immer schauen ob es (Github) Git-Repo gibt
+            -> git submodule add ...
+
+Siehe:
+  http://jashkenas.github.com/coffee-script/ (Script-Sprache)
+  http://raphaeljs.com/reference.html (SVG lib)
+
+UI
+--
+
+* Swap mode komplett implementieren (Spieler Schwarz bekommt Spielfeld gedreht)
+  + beim Einfügen/Updaten der Spielsteine umrechnen
+  + beim Einlesen von Spielzügen umrechnen
+  + Spielsteine per Animation noch mit drehen
+
+* "PopUps" (vielleicht mit jQuery UI oder jQuery) für
+  + Spielstart (Spielername, KI j/n, ServerIP (eventuell))
+  
+  Mögliche jQuery Plugins:
+  http://fancybox.net/
+  http://www.ericmmartin.com/projects/simplemodal/
+
+* Benachrichtigungen für
+  + Servermeldungen (Verbinndung etc.)
+  + Spielmeldungen (illegale Züge, spezielle Situationshinweise)
+  
+  Vielleicht im Growl-Stil in oberen linken Ecke (http://www.stanlemon.net/projects/jgrowl.html)
+
+* Animation
+  + von gegnerischen Zügen
+  + von gekickten Steinen
+  + vom Hinzufügen von Drachenzähnen
+  + von blockierten Steinen (könnten zittern & Benachrichtigung)
+    http://www.nextcode.it/demo/vibrate/index.php
+  + eines Siegs/Niederlage
+    Vorschlag: SVG-Symbol einer Strichfigur im Jubel/hängendem Kopf auf
+    gegrautem Hintergrund von 0 einblenden (scale: 1.0), dabei (bunter) Schriftzug:
+    http://raphaeljs.com/reference.html#registerFont
+  + eines Neustarts / neue Runde (Steine "fliegen" auf ihre Position)
+
+* Zeitlimit für Züge (noch nicht festgelegt) dezent darstellen:
+  Vielleicht kleiner Ladebalken (graue Punkte horizontal) unter dem Spielfeld,
+  sollte mit purem Raphael schnell implementiert sein. 
+
+* Züge einlesen:
+  Mit Beachtung der Begrenzung was Zugweite/-richtung angeht (siehe Anleitung).
+  Mögliche Felder könnten vielleicht etwas glimmen. Beim ersten Zug muss Stein
+  auch ausgewählt werden (auch glimmen (?)).
+  
+  Nützlich vielleicht: https://github.com/redbeard-tech/raphael_glow_shadow
+
+Socket/Spielablauf
+==================
+
+  http://socket.io
+
+* Protokol implementieren
+  + Details abstrahieren
+
+* Spielablauf
+  + FSM, wer zieht, worauf warten etc.
+
+  

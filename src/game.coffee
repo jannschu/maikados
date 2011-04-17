@@ -18,14 +18,18 @@
 $(document).ready ->
     paper = Raphael('game', 600, 600)
     field = new UIField(paper)
+    rand = (min, max) ->
+        Math.round(Math.random() * (max - min)) + min
+    dA = rand(0, 7)
+    dB = rand(0, 7)
     for x in [0..7]
-        a = new GamingPiece(7-x, 0, x, 0)
-        b = new GamingPiece(x, 7, x, 1)
-        if x % 2 == 0
-            a.setDragonTooths Math.round(Math.random() * 3) + 1
-            b.setDragonTooths Math.round(Math.random() * 3) + 1
+        a = new GamingPiece(7-x, 0 + rand(0, 3), x, 0)
+        b = new GamingPiece(x, 7 - rand(0, 3), x, 1)
+        a.setDragonTooths 3 if x is dA
+        b.setDragonTooths 2 if x is dB
+        
         field.addGamingPiece(a)
         field.addGamingPiece(b)
-    `f = field`
+    
     $(field.paper.canvas).click ->
         field.swapBackground()

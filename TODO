@@ -31,8 +31,8 @@ UI
 
 * Animation
   + von gegnerischen Zügen
-  + von gekickten Steinen
-  + vom Hinzufügen von Drachenzähnen
+  + von gekickten Steinen (Raphael: animation -> cubic-bezier)
+  + vom Hinzufügen von Drachenzähnen (von oben "drauffallen" (schneller werden, etwas hochspringen vielleicht))
   + von blockierten Steinen (könnten zittern & Benachrichtigung)
     http://www.nextcode.it/demo/vibrate/index.php
   + eines Siegs/Niederlage
@@ -44,6 +44,9 @@ UI
 * Zeitlimit für Züge (noch nicht festgelegt) dezent darstellen:
   Vielleicht kleiner Ladebalken (graue Punkte horizontal) unter dem Spielfeld,
   sollte mit purem Raphael schnell implementiert sein. 
+
+* Darstellung von Spielernamen & was zur Zeit geschieht (wer ist dran, Verbindungsaufbau etc => Status).
+  Sollte mit jQuery in HTML schnell erledigt sein.
 
 * Züge einlesen:
   Mit Beachtung der Begrenzung was Zugweite/-richtung angeht (siehe Anleitung).

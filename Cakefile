@@ -36,12 +36,12 @@ task 'build', 'Build single application file from source files', ->
             appContents[index] = fileContents
             process() if --remaining is 0
     process = ->
-        fs.writeFile "#{appName}.coffee", appContents.join('\n\n'), 'utf8', (err) ->
+        fs.writeFile "resources/#{appName}.coffee", appContents.join('\n\n'), 'utf8', (err) ->
             throw err if err
-            exec "coffee --compile #{appName}.coffee", (err, stdout, stderr) ->
+            exec "coffee --compile resources/#{appName}.coffee", (err, stdout, stderr) ->
                 throw err if err
                 console.log stdout + stderr
-                fs.unlink "#{appName}.coffee", (err) ->
+                fs.unlink "resources/#{appName}.coffee", (err) ->
                     throw err if err
                     console.log 'Building done.'
 

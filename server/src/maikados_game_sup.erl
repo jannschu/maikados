@@ -14,31 +14,13 @@
 %%% along with Maikados.  If not, see <http://www.gnu.org/licenses/>.
 
 %% --------------------------------------
-%% @doc Callback module for application behaviour
+%% @doc Supervisor for all running games
 %% @end
 %% --------------------------------------
--module(maikados_app).
-
--behaviour(application).
--export([start/2, stop/1]).
+-module(maikados_game_sup).
 
 -behaviour(supervisor).
 -export([start_link/0, init/1]).
-
-%% --------------------------------------
-%% @doc application behaviour callback
-%% @private
-%% --------------------------------------
-start(normal, _StartArgs) ->
-    maikados_client_listener:start(),
-    supervisor:start_link(?MODULE, []).
-
-%% --------------------------------------
-%% @doc application behaviour callback
-%% @private
-%% --------------------------------------
-stop(_State) ->
-    ok.
 
 %% --------------------------------------
 %% @doc supervisor behaviour callback
@@ -52,8 +34,7 @@ start_link() ->
 %% @private
 %% --------------------------------------
 init(_Args) ->
-    Children = [
-        {maikados_game_sup, {maikados_game_sup, start_link, []},
-         permanent, infinity, supervisor, [maikados_game_sup]}
-    ],
-    {ok, {{one_for_one, 5, 60}, Children}}.
+    Spec = {maikados_game, {maikados_game, start_link, []},
+            temporary, 15000, worker, [maikados_game]},
+    {ok, {{simple_one_for_one, 5, 60}, [Spec]}}.
+    

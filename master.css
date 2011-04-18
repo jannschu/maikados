@@ -1,3 +1,4 @@
+@charset "UTF-8";
 /*
  * This file is part of Maikados.
  *
@@ -14,6 +15,12 @@
  * You should have received a copy of the GNU General Public License
  * along with Maikados.  If not, see <http://www.gnu.org/licenses/>.
  */
+
+/* needs moar debugborder */
+/** {
+  border: red 1px dotted;
+}*/
+ 
 body {
   font-family: "Helvetica Neue", "Helvetica";
   background: #1B0F00;
@@ -46,7 +53,7 @@ a:hover { color: #FFCF8B; }
 #game #about {
   position: relative;
   left: 100%;
-  top: -600px;
+  top: 0px;
   padding: 1em;
   padding-top: 0;
   width: 45%;

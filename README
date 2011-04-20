@@ -10,5 +10,4 @@ Hints for developers (client)
 =============================
 
 - use `cake autobuild' ;-)
-- use 2 whitespaces (soft tabs) for indentation in CoffeeScript, CSS and 4 whitespaces in HTML
 - use the coding style already there please

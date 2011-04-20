@@ -122,14 +122,14 @@ class UIField
         lastBall = ellipseColor
         for [x, y] in dragonPositions
             deg = '200°'
-            ball = @paper.set(
+            ball = [
                 @paper.ellipse(x, y + r, r, r / 1.5).
                     attr(fill: "rhsb(#{deg},1,.25)-hsb(#{deg},1,.25)", stroke: 'none', opacity: 0),
                 @paper.ellipse(x, y, r, r).
                     attr(fill: "r(.5,.9)hsb(#{deg},1,.75)-hsb(#{deg},.5,.25)", stroke: 'none'),
                 @paper.ellipse(x, y, r - r/5, r - r/20).
                     attr(stroke: 'none', fill: 'r(.5,.1)#ccc-#ccc', opacity: 0)
-            )
+            ]
             lastBall = ball
         
         set.push(ellipseTop, bottom, ball)
@@ -138,7 +138,7 @@ class UIField
 
 class UIGamingPiece
     
-    colorMap = [
+    colorMap = [ # redundancy...
         '#F00', '#744700','#FF8000', '#F3F000',
         '#80FF00', '#C9FFEB', '#8D0DCE', '#0017F1']
     
@@ -160,7 +160,7 @@ class UIGamingPiece
         
         diff = 0.15
         
-        set = paper.set()
+        set = []
         rx = width * 0.5 * 0.9
         ry = height * 0.5 * 0.6
         top = height * (row + 0.49)
@@ -195,17 +195,16 @@ class UIGamingPiece
         
         for [x, y] in dragonPositions
             deg = '200°'
-            dragonTeeth.push( paper.set(
+            dragonTeeth.push( [
                 paper.ellipse(x, y + r, r, r / 1.5).
                     attr(fill: "rhsb(#{deg},1,.25)-hsb(#{deg},1,.25)", stroke: 'none', opacity: 0),
                 paper.ellipse(x, y, r, r).
                     attr(fill: "r(.5,.9)hsb(#{deg},1,.75)-hsb(#{deg},.5,.25)", stroke: 'none'),
                 paper.ellipse(x, y, r - r/5, r - r/20).
                     attr(stroke: 'none', fill: 'r(.5,.1)#ccc-#ccc', opacity: 0)
-            ) )
+            ] )
             
         
-        console.debug(dragonTeeth)
         set.push(ellipseTop, bottom, ellipseColor, dragonTeeth)
         @set = set
         
@@ -253,10 +252,15 @@ class UIGamingPiece
             attr: getEllipseAnimAttr(@set[2])
         animElems.push(animEllipseColor)
         
-        console.debug(@set)
         
-        #for elem in @set[3]
-        #    console.debug(elem)
+        for tooth in @set[3]
+            for elem in tooth
+                animDragonTooth =
+                    elem: elem
+                    attr: getEllipseAnimAttr(elem)
+                animElems.push(animDragonTooth)
+        
+        
         
         
         for animObj in animElems

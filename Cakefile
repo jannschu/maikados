@@ -22,6 +22,7 @@ appFiles = [ # in order of concatenation
     'lib',
     'gameobjects',
     'ui',
+    'ui-util',
     'game'
 ]
 

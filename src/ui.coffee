@@ -95,10 +95,9 @@ class UIField
         
         drawBottomEllipse = () =>
             path = @paper.path(getBottomEllipsePathStr(row, col, @height, @width))
-            console.debug(path)
             path.attr(fill: "15-#{color}").attr(strokeAttr)
             return path
-        console.debug(drawBottomEllipse)
+        
         bottom = drawBottomEllipse()
         
         ellipseTop = @paper.ellipse(@width * (col + 0.5), top, rx, ry)

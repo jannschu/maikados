@@ -93,14 +93,13 @@ class UIField
         ry = @height * 0.5 * 0.6
         top = @height * (row + 0.49)
         
-        drawBottomEllipse = (topX, length, parent) =>
-            left = @width * (col + (1 - 0.9) * 0.5)
-            path = @paper.path("M#{left},#{topX} v#{length} " +
-                "a#{rx},#{ry} 0 0 0 #{@width * 0.9},0 v-#{length}Z")
+        drawBottomEllipse = () =>
+            path = @paper.path(getBottomEllipsePathStr(row, col, @height, @width))
+            console.debug(path)
             path.attr(fill: "15-#{color}").attr(strokeAttr)
             return path
-        
-        bottom = drawBottomEllipse top, @height * diff, ellipseTop
+        console.debug(drawBottomEllipse)
+        bottom = drawBottomEllipse()
         
         ellipseTop = @paper.ellipse(@width * (col + 0.5), top, rx, ry)
         ellipseTop.attr(fill: "60-#{color}").attr(strokeAttr)

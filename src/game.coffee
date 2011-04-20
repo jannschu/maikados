@@ -28,11 +28,14 @@ $(document).ready ->
         a.setDragonTooths 3 if x is dA
         b.setDragonTooths 2 if x is dB
         
+        if b.getID() == "1-7"
+            b.setDragonTooths 3
+        
         field.addGamingPiece(a)
         field.addGamingPiece(b)
     
-    field.pieces["1-7"].obj.setDragonTooths 3
-    field.addGamingPiece(field.pieces["1-7"].obj)
+    #field.pieces["1-7"].obj.setDragonTooths 3
+    #field.addGamingPiece(field.pieces["1-7"].obj)
     
     $(field.paper.canvas).click ->
         field.swapBackground()

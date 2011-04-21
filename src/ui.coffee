@@ -15,13 +15,15 @@
 - along with Maikados.  If not, see <http://www.gnu.org/licenses/>.
 ###
 
-class UIField
-    # TODO: full swap support (to be considered at drawing etc.)
-    
-    colorMap = [
+UI = # UI constants
+    colorMap: [
         '#F00', '#744700','#FF8000', '#F3F000',
         '#80FF00', '#C9FFEB', '#8D0DCE', '#0017F1']
-        
+    
+    swapTime: 2000
+
+class UIField
+    # TODO: full swap support (to be considered at drawing etc.)
     
     fieldRows = [
         [7,6,5,4,3,2,1,0],
@@ -33,32 +35,28 @@ class UIField
     
     constructor: (@paper) ->
         @pieces = {}
-        @width = @paper.width / 8
-        @height = @paper.height / 8
+        @fieldSize = @paper.width / 8 # should be a square
+        
         @swapped = false
         @backgroundPieces = ([] for col in [0..7])
         @drawBackground()
     
+    getFieldSize: () ->
+        @fieldSize
+    
     addGamingPiece: (piece) ->
-        if oldPiece = @pieces[piece.getID()]
-            oldPiece.uiObj.set.remove()
-        
-        @pieces[piece.getID()] =
-            obj: piece,
-            row: piece.getRow(),
-            col: piece.getCol(),
-            uiObj: new UIGamingPiece(piece, this)
+        @pieces[piece.getID()] ?= new UIGamingPiece(piece, this)
     
     drawBackground: ->
         for rowData, rowNr in fieldRows
             for colorIndex, col in rowData
-                rect = @paper.rect(@width * col, @height * rowNr, @width, @height, 5)
-                rect.attr fill: colorMap[colorIndex]
+                rect = @paper.rect(@fieldSize * col, @fieldSize * rowNr, @fieldSize, @fieldSize, 5)
+                rect.attr fill: UI.colorMap[colorIndex]
                 @backgroundPieces[rowNr][col] = rect
     
     swapBackground: (callback) ->
         animationObj = null
-        time = 2000
+        time = UI.swapTime
         @swapped = !@swapped
         
         for row in [0..7]
@@ -68,8 +66,8 @@ class UIField
                     @backgroundPieces[row][col] = @backgroundPieces[7 - row][7 - col]
                     @backgroundPieces[7 - row][7 - col] = me
                 attr =
-                    "50%" : (x: (7 - col) * @width, rotation: 45)
-                    "100%": (y: (7 - row) * @height, rotation: 0)
+                    "50%" : (x: (7 - col) * @fieldSize, rotation: 45)
+                    "100%": (y: (7 - row) * @fieldSize, rotation: 0)
                 if animationObj
                    me.animateWith animationObj, attr, time
                 else
@@ -80,7 +78,7 @@ class UIField
     
     swapPieces: () ->
         for pieceID, piece of @pieces
-            piece.uiObj.swap(@backgroundPieces["1-7"])
+            piece.swap(@backgroundPieces["1-7"])
     
     swap: (callback) ->
         this.swapBackground(callback)
@@ -94,55 +92,48 @@ class UIGamingPiece
         '#80FF00', '#C9FFEB', '#8D0DCE', '#0017F1']
     
     constructor: (@piece, @field) ->
-        @swapped = 0 # ?
-        
-        piece = @piece
-        width = @field.width
-        height = @field.height
+        @swapped = false
+        @row = @piece.getRow()
+        @col = @piece.getCol()
+        @set = @drawPiece()
+    
+    drawPiece: () ->
+        fieldSize = @field.getFieldSize()
         paper = @field.paper
         
-        
-        row = piece.getRow()
-        col = piece.getCol()
-        [bg, color] = if piece.getSide() is 0 then ['#1B1B1B', '#333-#1B1B1B'] else ['#EEE', '#CCC-#EEE']
+        [bg, color] = if @piece.getSide() is 0 then ['#1B1B1B', '#333-#1B1B1B'] else ['#EEE', '#CCC-#EEE']
         strokeAttr =
-            stroke: (if piece.getSide() is 0 then 'black' else '#737373'),
+            stroke: (if @piece.getSide() is 0 then 'black' else '#737373'),
             'stroke-width': 1
         
         diff = 0.15
         
         set = []
-        rx = width * 0.5 * 0.9
-        ry = height * 0.5 * 0.6
-        top = height * (row + 0.49)
+        rx = fieldSize * 0.5 * 0.9
+        ry = fieldSize * 0.5 * 0.6
+        top = fieldSize * (@row + 0.49)
         
-        drawBottomEllipse = () =>
-            path = paper.path(getBottomEllipsePathStr(row, col, height, width))
-            path.attr(fill: "15-#{color}").attr(strokeAttr)
-            return path
+        bottom = paper.path(getBottomEllipsePathStr(@row, @col, fieldSize, fieldSize)).
+            attr(fill: "15-#{color}").attr(strokeAttr)
         
-        bottom = drawBottomEllipse()
+        ellipseTop = paper.ellipse(fieldSize * (@col + 0.5), top, rx, ry).
+            attr(fill: "60-#{color}").attr(strokeAttr)
         
-        ellipseTop = paper.ellipse(width * (col + 0.5), top, rx, ry)
-        ellipseTop.attr(fill: "60-#{color}").attr(strokeAttr)
-        
-        ellipseColor = paper.ellipse(width * (col + 0.5), top, rx, ry)
         bg = Raphael.getRGB(bg)
-        ellipseColor.attr(fill: "r(.5,.6)#{colorMap[piece.getColorID()]}:5%-rgba(#{bg.r},#{bg.g},#{bg.b},0)", stroke: 'none', opacity: 0)
+        ellipseColor = paper.ellipse(fieldSize * (@col + 0.5), top, rx, ry).
+            attr(fill: "r(.5,.6)#{colorMap[@piece.getColorID()]}:5%-rgba(#{bg.r},#{bg.g},#{bg.b},0)", stroke: 'none', opacity: 0)
         
         # dragon tooths
-        r = (width * 0.15 + height * 0.15) / 2
+        r = fieldSize * 0.15
         dragonPositions = [
             [],
-            [[width * (col + 0.38), top - ry * 0.9]],
-            [[width * (col + 0.34), top - ry], [width * (col + 0.66), top - ry]],
-            [[width * (col + 0.5), top - ry], [width * (col + 0.25), top - ry * 0.6], [width * (col + 0.75), top - ry * 0.6]],
-            [[width * (col + 0.35), top - ry * 0.9], [width * (col + 0.18), top - ry / 3], [width * (col + 0.65), top - ry * 0.9], [width * (col + 0.82), top - ry / 3]]
-        ][piece.getDragonTooths()]
-        lastBall = ellipseColor
+            [[fieldSize * (@col + 0.38), top - ry * 0.9]],
+            [[fieldSize * (@col + 0.34), top - ry], [fieldSize * (@col + 0.66), top - ry]],
+            [[fieldSize * (@col + 0.5), top - ry], [fieldSize * (@col + 0.25), top - ry * 0.6], [fieldSize * (@col + 0.75), top - ry * 0.6]],
+            [[fieldSize * (@col + 0.35), top - ry * 0.9], [fieldSize * (@col + 0.18), top - ry / 3], [fieldSize * (@col + 0.65), top - ry * 0.9], [fieldSize * (@col + 0.82), top - ry / 3]]
+        ][@piece.getDragonTooths()]
         
         dragonTeeth = []
-        
         
         for [x, y] in dragonPositions
             deg = '200°'
@@ -154,37 +145,29 @@ class UIGamingPiece
                 paper.ellipse(x, y, r - r/5, r - r/20).
                     attr(stroke: 'none', fill: 'r(.5,.1)#ccc-#ccc', opacity: 0)
             ] )
-            
         
         set.push(ellipseTop, bottom, ellipseColor, dragonTeeth)
-        @set = set
-        
+        set
+    
     swap: (withExtObj) ->
-        time = 2000
+        time = UI.swapTime
         
-        
-        width = @field.width
-        height = @field.height
+        fieldSize = @field.getFieldSize()
         paper = @field.paper
         
+        oldCol = @col
+        oldRow = @row
         if @swapped
-            oldCol = 7 - @piece.getCol()
-            oldRow = 7 - @piece.getRow()
-        else
-            oldCol = @piece.getCol()
-            oldRow = @piece.getRow()
+            oldCol = 7 - oldCol
+            oldRow = 7 - oldRow
         
         @swapped = !@swapped
         
         getEllipseAnimAttr = (obj) =>
             animAttr = 
-                "50%" : (cx: (7 - oldCol) * width + (obj.attrs.cx-oldCol*width))
-                "100%": (cy: (7 - oldRow) * height + (obj.attrs.cy-oldRow*height))
+                "50%" : (cx: (7 - oldCol) * fieldSize + (obj.attr('cx')-oldCol*fieldSize))
+                "100%": (cy: (7 - oldRow) * fieldSize + (obj.attr('cy')-oldRow*fieldSize))
             return animAttr
-        
-        correctPos = () =>
-            @set[1].attr(path: getBottomEllipsePathStr(oldRow, 7-oldCol, height, width))
-            
         
         animElems = []
         
@@ -193,13 +176,12 @@ class UIGamingPiece
             attr: getEllipseAnimAttr(@set[0])
         animElems.push(animTopEllipse)
         
-        
-        attrBottomEllipse =
-            "50%" : (path: getBottomEllipsePathStr(oldRow, 7-oldCol, height, width), callback: correctPos)
-            "100%": (path: getBottomEllipsePathStr(7-oldRow, 7-oldCol, height, width))
+        yDiffPath = @getBottomEllipsePathStr(oldRow, 7-oldCol)
         animBottomEllipse =
             elem: @set[1]
-            attr: attrBottomEllipse
+            attr:
+                "50%" : (path: yDiffPath, callback: () => @set[1].attr(path: yDiffPath))
+                "100%": (path: @getBottomEllipsePathStr(7-oldRow, 7-oldCol))
         animElems.push(animBottomEllipse)
         
         animEllipseColor =
@@ -215,13 +197,21 @@ class UIGamingPiece
                     attr: getEllipseAnimAttr(elem)
                 animElems.push(animDragonTooth)
         
-        
-        
-        
-        for animObj in animElems
+        for {elem, attr} in animElems
             if withObj
-                animObj.elem.animateWith withObj, animObj.attr, time
+                elem.animateWith withObj, attr, time
             else
-                animObj.elem.animate animObj.attr, time
-            withObj = animObj.elem
+                elem.animate attr, time
+                withObj = elem
+    
+    getBottomEllipsePathStr: (row, col) ->
+        fieldSize = @field.getFieldSize()
+        diff = 0.15
+        rx = fieldSize * 0.5 * 0.9
+        ry = fieldSize * 0.5 * 0.6
+        topX = fieldSize * (row + 0.49)
+        length = fieldSize * diff
         
+        left = fieldSize * (col + (1 - 0.9) * 0.5)
+        
+        "M#{left},#{topX} v#{length} a#{rx},#{ry} 0 0 0 #{fieldSize * 0.9},0 v-#{length}Z"

@@ -34,10 +34,6 @@ $(document).ready ->
         field.addGamingPiece(a)
         field.addGamingPiece(b)
     
-    #field.pieces["1-7"].obj.setDragonTooths 3
-    #field.addGamingPiece(field.pieces["1-7"].obj)
-    
     $(field.paper.canvas).click (event) ->
         field.swap()
-        #console.log(event.target)
 

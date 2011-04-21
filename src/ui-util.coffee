@@ -15,17 +15,3 @@
 - along with Maikados.  If not, see <http://www.gnu.org/licenses/>.
 ###
 
-getBottomEllipsePathStr = (row, col, height, width) =>
-    diff = 0.15
-    #set = @paper.set()
-    rx = width * 0.5 * 0.9
-    ry = height * 0.5 * 0.6
-    topX = height * (row + 0.49)
-    length = height*diff
-    
-    left = width * (col + (1 - 0.9) * 0.5)
-    
-    path = "M#{left},#{topX} v#{length} " +
-        "a#{rx},#{ry} 0 0 0 #{width * 0.9},0 v-#{length}Z"
-    #path.attr(fill: "15-#{color}").attr(strokeAttr)
-    return path

@@ -76,64 +76,15 @@ class UIField
                     animationObj = me
                     attr["100%"].callback = () =>
                         callback?()
-                    me.animate attr, time                        
+                    me.animate attr, time
     
-    createPieceSetNew: (piece) -> # probably obsolete
-        return # TODO: ZA WARUDO
+    swapPieces: () ->
+        for pieceID, piece of @pieces
+            piece.uiObj.swap(@backgroundPieces["1-7"])
     
-    createPieceSet: (piece) -> # probably obsolete
-        row = piece.getRow()
-        col = piece.getCol()
-        [bg, color] = if piece.getSide() is 0 then ['#1B1B1B', '#333-#1B1B1B'] else ['#EEE', '#CCC-#EEE']
-        strokeAttr =
-            stroke: (if piece.getSide() is 0 then 'black' else '#737373'),
-            'stroke-width': 1
-        
-        diff = 0.15
-        
-        set = @paper.set()
-        rx = @width * 0.5 * 0.9
-        ry = @height * 0.5 * 0.6
-        top = @height * (row + 0.49)
-        
-        drawBottomEllipse = () =>
-            path = @paper.path(getBottomEllipsePathStr(row, col, @height, @width))
-            path.attr(fill: "15-#{color}").attr(strokeAttr)
-            return path
-        
-        bottom = drawBottomEllipse()
-        
-        ellipseTop = @paper.ellipse(@width * (col + 0.5), top, rx, ry)
-        ellipseTop.attr(fill: "60-#{color}").attr(strokeAttr)
-        
-        ellipseColor = @paper.ellipse(@width * (col + 0.5), top, rx, ry)
-        bg = Raphael.getRGB(bg)
-        ellipseColor.attr(fill: "r(.5,.6)#{colorMap[piece.getColorID()]}:5%-rgba(#{bg.r},#{bg.g},#{bg.b},0)", stroke: 'none', opacity: 0)
-        
-        # dragon tooths
-        r = (@width * 0.15 + @height * 0.15) / 2
-        dragonPositions = [
-            [],
-            [[@width * (col + 0.38), top - ry * 0.9]],
-            [[@width * (col + 0.34), top - ry], [@width * (col + 0.66), top - ry]],
-            [[@width * (col + 0.5), top - ry], [@width * (col + 0.25), top - ry * 0.6], [@width * (col + 0.75), top - ry * 0.6]],
-            [[@width * (col + 0.35), top - ry * 0.9], [@width * (col + 0.18), top - ry / 3], [@width * (col + 0.65), top - ry * 0.9], [@width * (col + 0.82), top - ry / 3]]
-        ][piece.getDragonTooths()]
-        lastBall = ellipseColor
-        for [x, y] in dragonPositions
-            deg = '200°'
-            ball = [
-                @paper.ellipse(x, y + r, r, r / 1.5).
-                    attr(fill: "rhsb(#{deg},1,.25)-hsb(#{deg},1,.25)", stroke: 'none', opacity: 0),
-                @paper.ellipse(x, y, r, r).
-                    attr(fill: "r(.5,.9)hsb(#{deg},1,.75)-hsb(#{deg},.5,.25)", stroke: 'none'),
-                @paper.ellipse(x, y, r - r/5, r - r/20).
-                    attr(stroke: 'none', fill: 'r(.5,.1)#ccc-#ccc', opacity: 0)
-            ]
-            lastBall = ball
-        
-        set.push(ellipseTop, bottom, ball)
-        return set
+    swap: (callback) ->
+        this.swapBackground(callback)
+        this.swapPieces()
 
 
 class UIGamingPiece

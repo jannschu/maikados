@@ -87,10 +87,6 @@ class UIField
 
 class UIGamingPiece
     
-    colorMap = [ # redundancy...
-        '#F00', '#744700','#FF8000', '#F3F000',
-        '#80FF00', '#C9FFEB', '#8D0DCE', '#0017F1']
-    
     constructor: (@piece, @field) ->
         @swapped = false
         @row = @piece.getRow()
@@ -121,7 +117,7 @@ class UIGamingPiece
         
         bg = Raphael.getRGB(bg)
         ellipseColor = paper.ellipse(fieldSize * (@col + 0.5), top, rx, ry).
-            attr(fill: "r(.5,.6)#{colorMap[@piece.getColorID()]}:5%-rgba(#{bg.r},#{bg.g},#{bg.b},0)", stroke: 'none', opacity: 0)
+            attr(fill: "r(.5,.6)#{UI.colorMap[@piece.getColorID()]}:5%-rgba(#{bg.r},#{bg.g},#{bg.b},0)", stroke: 'none', opacity: 0)
         
         # dragon tooths
         r = fieldSize * 0.15

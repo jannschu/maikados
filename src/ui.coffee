@@ -113,7 +113,7 @@ class UIGamingPiece
         ry = fieldSize * 0.5 * 0.6
         top = fieldSize * (@row + 0.49)
         
-        bottom = paper.path(getBottomEllipsePathStr(@row, @col, fieldSize, fieldSize)).
+        bottom = paper.path(@getBottomEllipsePathStr(@row, @col, fieldSize, fieldSize)).
             attr(fill: "15-#{color}").attr(strokeAttr)
         
         ellipseTop = paper.ellipse(fieldSize * (@col + 0.5), top, rx, ry).

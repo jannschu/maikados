@@ -182,6 +182,9 @@ class UIGamingPiece
                 "100%": (cy: (7 - oldRow) * height + (obj.attrs.cy-oldRow*height))
             return animAttr
         
+        correctPos = () =>
+            @set[1].attr(path: getBottomEllipsePathStr(oldRow, 7-oldCol, height, width))
+            
         
         animElems = []
         
@@ -190,8 +193,9 @@ class UIGamingPiece
             attr: getEllipseAnimAttr(@set[0])
         animElems.push(animTopEllipse)
         
+        
         attrBottomEllipse =
-            "50%" : (path: getBottomEllipsePathStr(oldRow, 7-oldCol, height, width))
+            "50%" : (path: getBottomEllipsePathStr(oldRow, 7-oldCol, height, width), callback: correctPos)
             "100%": (path: getBottomEllipsePathStr(7-oldRow, 7-oldCol, height, width))
         animBottomEllipse =
             elem: @set[1]

@@ -38,5 +38,4 @@ $(document).ready ->
     #field.addGamingPiece(field.pieces["1-7"].obj)
     
     $(field.paper.canvas).click ->
-        field.swapBackground()
-        field.pieces["1-7"].uiObj.swap()
+        field.swap()

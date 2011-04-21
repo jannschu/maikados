@@ -33,6 +33,7 @@ class UIField
     
     constructor: (@paper) ->
         @pieces = {}
+        @piecePositionCache = {}
         @width = @paper.width / 8
         @height = @paper.height / 8
         @swapped = false
@@ -48,6 +49,9 @@ class UIField
             row: piece.getRow(),
             col: piece.getCol(),
             uiObj: new UIGamingPiece(piece, this)
+        
+        # only true positions (unswapped) are cached
+        @piecePositionCache[piece.getRow()*piece.getCol()] = @pieces[piece.getID()]
     
     drawBackground: ->
         for rowData, rowNr in fieldRows
@@ -182,6 +186,7 @@ class UIGamingPiece
                 "100%": (cy: (7 - oldRow) * height + (obj.attrs.cy-oldRow*height))
             return animAttr
         
+        # dirty workaround
         correctPos = () =>
             @set[1].attr(path: getBottomEllipsePathStr(oldRow, 7-oldCol, height, width))
             
@@ -207,7 +212,6 @@ class UIGamingPiece
             attr: getEllipseAnimAttr(@set[2])
         animElems.push(animEllipseColor)
         
-        
         for tooth in @set[3]
             for elem in tooth
                 animDragonTooth =
@@ -216,12 +220,10 @@ class UIGamingPiece
                 animElems.push(animDragonTooth)
         
         
-        
-        
         for animObj in animElems
             if withObj
                 animObj.elem.animateWith withObj, animObj.attr, time
             else
                 animObj.elem.animate animObj.attr, time
             withObj = animObj.elem
-        
+    

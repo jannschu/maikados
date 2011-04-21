@@ -52,3 +52,6 @@ task 'autobuild', 'Watches for file changes and runs the build task', ->
             unless curr.mtime.valueOf() is prev.mtime.valueOf()
                 exec 'cake build', (err, stdout, stderr) ->
                     console.log stdout + stderr
+
+task 'uglify', 'Compresses JavaScript using UglifyJS', ->
+    exec "uglifyjs -o resources/maikados.js resources/maikados.js"

@@ -14,7 +14,6 @@ UI
 * Swap mode komplett implementieren (Spieler Schwarz bekommt Spielfeld gedreht)
   + beim Einfügen/Updaten der Spielsteine umrechnen
   + beim Einlesen von Spielzügen umrechnen
-  + Spielsteine per Animation noch mit drehen
 
 * "PopUps" (vielleicht mit jQuery UI oder jQuery) für
   + Spielstart (Spielername, KI j/n, ServerIP (eventuell))
@@ -40,10 +39,6 @@ UI
     gegrautem Hintergrund von 0 einblenden (scale: 1.0), dabei (bunter) Schriftzug:
     http://raphaeljs.com/reference.html#registerFont
   + eines Neustarts / neue Runde (Steine "fliegen" auf ihre Position)
-
-* Zeitlimit für Züge (noch nicht festgelegt) dezent darstellen:
-  Vielleicht kleiner Ladebalken (graue Punkte horizontal) unter dem Spielfeld,
-  sollte mit purem Raphael schnell implementiert sein. 
 
 * Darstellung von Spielernamen & was zur Zeit geschieht (wer ist dran, Verbindungsaufbau etc => Status).
   Sollte mit jQuery in HTML schnell erledigt sein.

@@ -33,19 +33,47 @@ class UIField
     ]
     fieldRows = fieldRows.concat [row.reverse()] for row in $.extend(true, [], fieldRows).reverse()
     
-    constructor: (@paper) ->
+    constructor: (element) ->
+        @progressBar = new Raphael(element, 600, 10)
+        @paper = new Raphael(element, 600, 600)
         @pieces = {}
         @fieldSize = @paper.width / 8 # should be a square
         
         @swapped = false
         @backgroundPieces = ([] for col in [0..7])
         @drawBackground()
+        @progressBarBalls = @drawProgressBar()
     
     getFieldSize: () ->
         @fieldSize
     
     addGamingPiece: (piece) ->
         @pieces[piece.getID()] ?= new UIGamingPiece(piece, this)
+    
+    drawProgressBar: () ->
+        width = @progressBar.width
+        r = @progressBar.height / 2
+        a = r / 2
+        n = Math.round((width + a) / (2 * r + a))
+        a = (width - n * 2 * r) / (n - 1)
+        hue = 0
+        step = 360 / n
+        balls = []
+        for i in [1..n]
+            newHue = hue + step
+            balls.push @progressBar.circle((2 * r + a) * (i - 1) + r, r, r).attr(fill: "0-hsb(#{hue}°, .5, .5)-hsb(#{newHue}°, .5, .5)", 'fill-opacity': '50%')
+            hue = newHue
+        balls
+    
+    setProgressBar: (val) ->
+        return unless 0 <= val <= 100
+        balls = Math.round((val / 100) * @progressBarBalls.length)
+        r = @progressBar.height / 2
+        for ball, nr in @progressBarBalls
+            if nr < balls
+                ball.animate(('r': r), 300)
+            else
+                ball.animate(('r': 0), 300)
     
     drawBackground: ->
         for rowData, rowNr in fieldRows

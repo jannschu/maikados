@@ -16,8 +16,8 @@
 ###
 
 $(document).ready ->
-    paper = Raphael('game', 600, 600)
-    field = new UIField(paper)
+    field = new UIField('game')
+    
     rand = (min, max) ->
         Math.round(Math.random() * (max - min)) + min
     dA = rand(0, 7)
@@ -34,6 +34,13 @@ $(document).ready ->
         field.addGamingPiece(a)
         field.addGamingPiece(b)
     
+    pos = 100
+    countDown = () ->
+        pos = 100 if pos < 0
+        field.setProgressBar pos
+        pos -= 1
+        window.setTimeout countDown, 500
+    countDown()
+    
     $(field.paper.canvas).click (event) ->
         field.swap()
-

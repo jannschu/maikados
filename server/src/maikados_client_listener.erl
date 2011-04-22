@@ -19,10 +19,13 @@
 %% --------------------------------------
 -module(maikados_client_listener).
 
--behaviour(gen_event).
--export([init/1, handle_event/2, terminate/2, handle_request/3]).
+-include_lib("deps/socketio/include/socketio.hrl").
 
--export([start/0]).
+-behaviour(gen_event).
+-export([init/1, handle_event/2,
+    handle_call/2, handle_info/2, code_change/3, terminate/2]).
+
+-export([start/0, handle_request/3]).
 
 %% --------------------------------------
 %% @doc Starts to listen, registers event callback
@@ -31,31 +34,60 @@
 start() ->
     {ok, Pid} = socketio_listener:start([{http_port, 7878},
                                          {default_http_handler, ?MODULE}]),
+    erlang:link(Pid),
     EventMgr = socketio_listener:event_manager(Pid),
     ok = gen_event:add_handler(EventMgr, ?MODULE, []).
 
-%% --------------------------------------
-%% @doc gen_event callback function
-%% @private
-%% --------------------------------------
-init([]) ->
-    State = dict:new(),
-    {ok, State}.
+%%% ======================================
+%%% gen_event CALLBACKS
+%%% ======================================
 
-%% --------------------------------------
-%% @doc gen_event callback function
-%% @private
-%% --------------------------------------
+init([]) ->
+    {ok, dict:new()};
+
+init([Pid]) ->
+    {ok, Pid}.
+
+handle_event({client, Client}, State) ->
+    ClientServer = maikados_client_sup:new_client(Client),
+    NewState = dict:store(Client, ClientServer, State),
+    EventMgr = socketio_client:event_manager(Client),
+    ok = gen_event:add_handler(EventMgr, ?MODULE, [ClientServer]),
+    {ok, NewState};
+
+handle_event({message, _Client, #msg{ content = Content }}, Pid) ->
+    maikados_client:receive_msg(Pid, Content),
+    {ok, Pid};
+
+handle_event({disconnect, Client}, State) ->
+    case dict:find(Client, State) of
+        {ok, ClientPid} ->
+            maikados_client:stop(ClientPid);
+        error ->
+            ok
+    end,
+    {ok, dict:erase(Client, State)};
+
 handle_event(Event, State) ->
     io:format("EVENT: ~p~n", [Event]),
     {ok, State}.
 
-%% --------------------------------------
-%% @doc gen_event callback function
-%% @private
-%% --------------------------------------
+handle_call(Request, State) ->
+    Reply = Request,
+    {ok, Reply, State}.
+
+handle_info(_Info, State) ->
+    {ok, State}.
+
+code_change(_OldVsn, State, _Extra) ->
+    {ok, State}.
+
 terminate(_Reason, _State) ->
     todo.
+
+%%% ======================================
+%%% http handler
+%%% ======================================
 
 %% --------------------------------------
 %% @doc http request callback function
@@ -72,7 +104,7 @@ handle_request(_Method, _Path, Req) ->
         "index.html",
         "lib/socket.io/socket.io.min.js",
         "resources/master.css",
-        "lib/raphael/raphael-min.js",
+        "lib/raphael/raphael.js",
         "resources/maikados.js",
         "resources/gplv3-88x31.png",
         "favicon.ico"

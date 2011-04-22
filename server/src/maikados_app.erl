@@ -31,7 +31,7 @@
 %% --------------------------------------
 start(normal, _StartArgs) ->
     maikados_client_listener:start(),
-    supervisor:start_link(?MODULE, []).
+    supervisor:start_link({local, ?MODULE}, ?MODULE, []).
 
 %% --------------------------------------
 %% @doc application behaviour callback
@@ -54,6 +54,8 @@ start_link() ->
 init(_Args) ->
     Children = [
         {maikados_game_sup, {maikados_game_sup, start_link, []},
-         permanent, infinity, supervisor, [maikados_game_sup]}
+         permanent, infinity, supervisor, [maikados_game_sup]},
+        {maikados_client_sup, {maikados_client_sup, start_link, []},
+         permanent, infinity, supervisor, [maikados_client_sup]}
     ],
     {ok, {{one_for_one, 5, 60}, Children}}.

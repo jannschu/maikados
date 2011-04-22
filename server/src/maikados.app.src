@@ -5,7 +5,10 @@
   {modules, [
     maikados_app,
     maikados_game_sup,
-    maikados_client_listener
+    maikados_client_listener,
+    maikados_game_sup,
+    maikados_client_sup,
+    maikados_client
   ]},
   {registered, []},
   {applications, [kernel, stdlib]},

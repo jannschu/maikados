@@ -14,13 +14,23 @@
 %%% along with Maikados.  If not, see <http://www.gnu.org/licenses/>.
 
 %% --------------------------------------
-%% @doc Supervisor for all running games
+%% @doc Supervisor for all connected clients
 %% @end
 %% --------------------------------------
--module(maikados_game_sup).
+-module(maikados_client_sup).
 
 -behaviour(supervisor).
 -export([start_link/0, init/1]).
+
+-export([new_client/1]).
+
+%% --------------------------------------
+%% @doc Creates new maikados_client and returns Pid
+%% @end
+%% --------------------------------------
+new_client(Args) ->
+    {ok, Pid} = supervisor:start_child(?MODULE, [Args]),
+    Pid.
 
 %% --------------------------------------
 %% @doc supervisor behaviour callback
@@ -34,6 +44,6 @@ start_link() ->
 %% @private
 %% --------------------------------------
 init(_Args) ->
-    Spec = {maikados_game, {maikados_game, start_link, []},
-            temporary, 15000, worker, [maikados_game]},
+    Spec = {maikados_client, {maikados_client, start_link, []},
+            temporary, 5000, worker, [maikados_client]},
     {ok, {{simple_one_for_one, 5, 60}, [Spec]}}.

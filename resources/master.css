@@ -81,3 +81,7 @@ footer a {
   text-align: center;
   opacity: 0.3;
 }
+
+#fancybox-content {
+    color: black;
+}

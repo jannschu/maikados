@@ -15,12 +15,7 @@ UI
   + beim Einfügen/Updaten der Spielsteine umrechnen
   + beim Einlesen von Spielzügen umrechnen
 
-* "PopUps" (vielleicht mit jQuery UI oder jQuery) für
-  + Spielstart (Spielername, KI j/n, ServerIP (eventuell))
-  
-  Mögliche jQuery Plugins:
-  http://fancybox.net/
-  http://www.ericmmartin.com/projects/simplemodal/
+* "PopUp" für: KI j/n
 
 * Benachrichtigungen für
   + Servermeldungen (Verbinndung etc.)

@@ -17,7 +17,7 @@
 
 UI = # UI constants
     colorMap: [
-        '#F00', '#744700','#FF8000', '#F3F000',
+        '#F00', '#BA7100','#FF8000', '#F3F000',
         '#80FF00', '#C9FFEB', '#8D0DCE', '#0017F1']
     
     swapTime: 2000
@@ -119,6 +119,21 @@ class UIField
     - private methods
     ###
     
+    _highlightFields: (fields) ->
+        fieldMap = {}
+        for i in [0..63]
+            fieldMap[i] = off
+        for i in fields
+            fieldMap[i] = on
+
+        for i, status of fieldMap
+            row = Math.floor i / 8
+            col = i - row * 8
+            piece = @backgroundPieces[row][col]
+            opacity = if status then 1 else 0.3
+            piece.stop()
+            piece.animate(('fill-opacity': opacity), 300)
+    
     _swapBackground: (callback) ->
         animationObj = null
         time = UI.swapTime
@@ -137,8 +152,7 @@ class UIField
                    me.animateWith animationObj, attr, time
                 else
                     animationObj = me
-                    attr["100%"].callback = () =>
-                        callback?()
+                    attr["100%"].callback = callback if callback
                     me.animate attr, time
     
     _drawProgressBar: () ->

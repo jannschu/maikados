@@ -4,3 +4,6 @@
 [submodule "lib/raphael"]
 	path = lib/raphael
 	url = git@github.com:jannschu/raphael.git
+[submodule "lib/gritter"]
+	path = lib/gritter
+	url = git://github.com/jboesch/Gritter.git

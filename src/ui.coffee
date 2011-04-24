@@ -79,7 +79,7 @@ class UIField
         r = @progressBar.height / 2
         for ball, nr in @progressBarBalls
             if nr < balls
-                ball.animate(('r': r), 300)
+                ball.animate(('r': r - 1), 300)
             else
                 ball.animate(('r': 0), 300)
     
@@ -185,7 +185,8 @@ class UIField
         balls = []
         for i in [1..n]
             newHue = hue + step
-            balls.push @progressBar.circle((2 * r + a) * (i - 1) + r, r, r).attr(fill: "0-hsb(#{hue}°, .5, .5)-hsb(#{newHue}°, .5, .5)", 'fill-opacity': '50%', stroke: 'none')
+            balls.push @progressBar.circle((2 * r + a) * (i - 1) + r, r, r - 1).
+                attr(fill: "0-hsb(#{hue}°, .5, .5)-hsb(#{newHue}°, .5, .5)", 'fill-opacity': '50%', stroke: 'none')
             hue = newHue
         balls
     

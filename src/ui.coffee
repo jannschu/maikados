@@ -119,6 +119,25 @@ class UIField
     - private methods
     ###
     
+    _registerHoverFun: () ->
+        registerHoverFor = (ui, piece, nr) ->
+            fields = []
+            row = Math.floor(nr / 8)
+            col = nr - row * 8
+            color = fieldRows[row][col]
+            for x in [0..7]
+                for y in [0..7]
+                    fields.push y * 8 + x if fieldRows[y][x] is color
+            over = () ->
+                ui._highlightFields fields
+            out = () ->
+                ui._highlightFields [0..63]
+            piece.hover over, out
+        
+        for x in [0..7]
+            for y in [0..7]
+                registerHoverFor this, @backgroundPieces[y][x], y * 8 + x
+    
     _highlightFields: (fields) ->
         fieldMap = {}
         for i in [0..63]

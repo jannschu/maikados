@@ -20,6 +20,7 @@ class MaikadosGame extends GameState
     constructor: (@ui) ->
         super 'waitForStart'
         @setupDebug()
+        @ui._registerHoverFun()
         @ui.postNotification 'Offensichtlich ein Fehler. Mist.', 'warn'
         @ui.postNotification 'Sonst sieht es gut aus'
         @ui.getNickName (nick, handling) =>

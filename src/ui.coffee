@@ -17,7 +17,7 @@
 
 UI = # UI constants
     colorMap: [
-        '#F00', '#BA7100','#FF8000', '#F3F000',
+        '#F00', '#F305FC', '#FF8000', '#F3F000',
         '#80FF00', '#C9FFEB', '#8D0DCE', '#0017F1']
     
     swapTime: 2000
@@ -149,7 +149,7 @@ class UIField
             row = Math.floor i / 8
             col = i - row * 8
             piece = @backgroundPieces[row][col]
-            opacity = if status then 1 else 0.3
+            opacity = if status then 1 else 0.2
             piece.stop()
             piece.animate(('fill-opacity': opacity), 300)
     

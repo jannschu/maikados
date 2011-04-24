@@ -17,12 +17,6 @@ UI
 
 * "PopUp" für: KI j/n
 
-* Benachrichtigungen für
-  + Servermeldungen (Verbinndung etc.)
-  + Spielmeldungen (illegale Züge, spezielle Situationshinweise)
-  
-  Vielleicht im Growl-Stil in oberen linken Ecke (http://www.stanlemon.net/projects/jgrowl.html)
-
 * Animation
   + von gegnerischen Zügen
   + von gekickten Steinen (Raphael: animation -> cubic-bezier)

@@ -113,3 +113,14 @@ footer a {
 }
 
 #nicknameErrorMsg svg { float: left; margin-right: 10px; }
+
+.jnotify-message {
+    min-height: 30px;
+    padding-top: 25px !important;
+}
+.jnotify-message svg {
+    display: inline;
+    float: left;
+    margin-top: -5px;
+    margin-right: 10px;
+}

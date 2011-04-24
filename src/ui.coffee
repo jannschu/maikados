@@ -33,16 +33,31 @@ class UIField
     ]
     fieldRows = fieldRows.concat [row.reverse()] for row in $.extend(true, [], fieldRows).reverse()
     
+    signs =
+        info: ['M16,4.938c-7.732,0-14,4.701-14,10.5c0,1.981,0.741,3.833,2.016,
+            5.414L2,25.272l5.613-1.44c2.339,1.316,5.237,2.106,8.387,2.106c7.732,0,14-4.701,
+            14-10.5S23.732,4.938,16,4.938zM16.868,21.375h-1.969v-1.889h1.969V21.375zM16.772,
+            18.094h-1.777l-0.176-8.083h2.113L16.772,18.094z',
+            {fill: '#F5F6F5', stroke: 'none'}]
+        warn: ['M29.225,23.567l-3.778-6.542c-1.139-1.972-3.002-5.2-4.141-7.172l-3.778-6.542
+            c-1.14-1.973-3.003-1.973-4.142,0L9.609,9.853c-1.139,1.972-3.003,
+            5.201-4.142,7.172L1.69,23.567c-1.139,1.974-0.207,3.587,2.071,3.587h
+            23.391C29.432,27.154,30.363,25.541,29.225,23.567zM16.536,24.58h-2.241
+            v-2.151h2.241V24.58zM16.428,20.844h-2.023l-0.201-9.204h2.407L16.428,20.844z',
+            {fill: '#BA4143', stroke: 'none'}]
+    
     constructor: (element) ->
         @progressBar = new Raphael(element, 600, 10)
         @paper = new Raphael(element, 600, 600)
         
-        sign = 'M29.225,23.567l-3.778-6.542c-1.139-1.972-3.002-5.2-4.141-7.172l-3.778-6.542' +
-            'c-1.14-1.973-3.003-1.973-4.142,0L9.609,9.853c-1.139,1.972-3.003,' +
-            '5.201-4.142,7.172L1.69,23.567c-1.139,1.974-0.207,3.587,2.071,3.587h' +
-            '23.391C29.432,27.154,30.363,25.541,29.225,23.567zM16.536,24.58h-2.241' +
-            'v-2.151h2.241V24.58zM16.428,20.844h-2.023l-0.201-9.204h2.407L16.428,20.844z'
-        (new Raphael('nicknameErrorMsg', 30, 30)).path(sign).attr(fill: '#BA4143', stroke: 'none')
+        for name, data of signs
+            [path, attrs] = data
+            (new Raphael('uiElements', 30, 30)).path(path).attr(attrs)
+            $("#uiElements svg:first").attr(id: "svg-#{name}")
+        
+        $('#nicknameErrorMsg').prepend($('#svg-warn'))
+        
+        $.jnotify.setup(delay: 5000)
         
         @pieces = {}
         @fieldSize = @paper.width / 8 # should be a square
@@ -95,6 +110,11 @@ class UIField
                     $('#chooseNickname').click(event))
             )
     
+    postNotification: (msg, sign = 'info') ->
+        sign = if signs[sign] then sign else 'info'
+        elem = $("#svg-#{sign}").clone().attr(id: null)
+        $.jnotify(msg, create: (e) -> $('.jnotify-message', e).prepend(elem))
+    
     ###
     - private methods
     ###
@@ -132,7 +152,7 @@ class UIField
         balls = []
         for i in [1..n]
             newHue = hue + step
-            balls.push @progressBar.circle((2 * r + a) * (i - 1) + r, r, r).attr(fill: "0-hsb(#{hue}°, .5, .5)-hsb(#{newHue}°, .5, .5)", 'fill-opacity': '50%')
+            balls.push @progressBar.circle((2 * r + a) * (i - 1) + r, r, r).attr(fill: "0-hsb(#{hue}°, .5, .5)-hsb(#{newHue}°, .5, .5)", 'fill-opacity': '50%', stroke: 'none')
             hue = newHue
         balls
     

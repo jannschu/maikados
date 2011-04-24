@@ -15,3 +15,19 @@
 - along with Maikados.  If not, see <http://www.gnu.org/licenses/>.
 ###
 
+class NetConnection
+
+    constructor: () ->
+        @socket = new io.Socket()
+        @callbackObjects = []
+        @socket.connect()
+        
+        @socket.on 'message', (msg) =>
+            (obj.sendEvent 'packet', msg) for obj in @callbackObjects
+        
+        
+        
+    # callback should be an instance of GameState
+    onMessage: (callback) ->
+        @callbackObjects.push callback
+    

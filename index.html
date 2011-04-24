@@ -18,14 +18,14 @@
           - along with Maikados.  If not, see <http://www.gnu.org/licenses/>.
           -->
         <title>Maikados</title>
-        <meta http-equiv="X-UA-Compatible" content="chrome=1">
+        <!--[if IE]><meta http-equiv="X-UA-Compatible" content="chrome=1"><![endif]-->
         <meta charset="UTF-8">
         <link rel="stylesheet" href="resources/master.css" type="text/css" media="screen">
         <link rel="stylesheet" href="lib/fancybox/jquery.fancybox-1.3.4.css" type="text/css" media="screen">
         <script type="text/javascript" src="lib/raphael/raphael.js"></script>
         <script type="text/javascript" src="lib/socket.io/socket.io.min.js"></script>
         <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.5.2/jquery.min.js"></script>
-        <!--<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.11/jquery-ui.min.js"></script>-->
+        <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.11/jquery-ui.min.js"></script>
         <script type="text/javascript" src="lib/fancybox/jquery.fancybox-1.3.4.pack.js"></script>
         <script type="text/javascript" src="resources/maikados.js"></script>
     </head>
@@ -52,5 +52,14 @@
             Copyright (©) 2011 Jannik Schürg <span class="email">jannschu@gmail.com</span>
             <a href="http://www.fsf.org/"><img src="resources/gplv3-88x31.png" alt="Lizenz GPLv3 Logo"></a>
         </footer>
+        
+        <div id="uiElements" style="display: none">
+            <div id="getPlayerName">
+                <p id="nicknameErrorMsg"><span class="msg"></span></p>
+                <label for="nickname">Und bitte</label>
+                <input type="text" value="" id="nickname">
+                <button id="chooseNickname">Abschicken</button>
+            </div>
+        </div>
     </body>
 </html>

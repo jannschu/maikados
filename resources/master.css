@@ -85,3 +85,31 @@ footer a {
 #fancybox-content {
     color: black;
 }
+
+#getPlayerName {
+    padding: 1em;
+    width: 300px;
+    text-align: center;
+}
+
+#getPlayerName label:after { content: ":"; }
+#getPlayerName button {
+    display: block;
+    margin: auto;
+    margin-top: 1em;
+}
+
+#nicknameErrorMsg {
+    display: none;
+    height: 30px;
+    line-height: 30px;
+    vertical-align: middle;
+    padding: 1em;
+    margin-top: -0.5em;
+}
+
+#nicknameErrorMsg span.msg {
+    color: #940000;
+}
+
+#nicknameErrorMsg svg { float: left; margin-right: 10px; }

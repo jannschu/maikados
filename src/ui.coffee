@@ -36,34 +36,27 @@ class UIField
     constructor: (element) ->
         @progressBar = new Raphael(element, 600, 10)
         @paper = new Raphael(element, 600, 600)
+        
+        sign = 'M29.225,23.567l-3.778-6.542c-1.139-1.972-3.002-5.2-4.141-7.172l-3.778-6.542' +
+            'c-1.14-1.973-3.003-1.973-4.142,0L9.609,9.853c-1.139,1.972-3.003,' +
+            '5.201-4.142,7.172L1.69,23.567c-1.139,1.974-0.207,3.587,2.071,3.587h' +
+            '23.391C29.432,27.154,30.363,25.541,29.225,23.567zM16.536,24.58h-2.241' +
+            'v-2.151h2.241V24.58zM16.428,20.844h-2.023l-0.201-9.204h2.407L16.428,20.844z'
+        (new Raphael('nicknameErrorMsg', 30, 30)).path(sign).attr(fill: '#BA4143', stroke: 'none')
+        
         @pieces = {}
         @fieldSize = @paper.width / 8 # should be a square
-        
         @swapped = false
         @backgroundPieces = ([] for col in [0..7])
-        @drawBackground()
-        @progressBarBalls = @drawProgressBar()
+        
+        @_drawBackground()
+        @progressBarBalls = @_drawProgressBar()
     
     getFieldSize: () ->
         @fieldSize
     
     addGamingPiece: (piece) ->
         @pieces[piece.getID()] ?= new UIGamingPiece(piece, this)
-    
-    drawProgressBar: () ->
-        width = @progressBar.width
-        r = @progressBar.height / 2
-        a = r / 2
-        n = Math.round((width + a) / (2 * r + a))
-        a = (width - n * 2 * r) / (n - 1)
-        hue = 0
-        step = 360 / n
-        balls = []
-        for i in [1..n]
-            newHue = hue + step
-            balls.push @progressBar.circle((2 * r + a) * (i - 1) + r, r, r).attr(fill: "0-hsb(#{hue}°, .5, .5)-hsb(#{newHue}°, .5, .5)", 'fill-opacity': '50%')
-            hue = newHue
-        balls
     
     setProgressBar: (val) ->
         return unless 0 <= val <= 100
@@ -75,14 +68,38 @@ class UIField
             else
                 ball.animate(('r': 0), 300)
     
-    drawBackground: ->
-        for rowData, rowNr in fieldRows
-            for colorIndex, col in rowData
-                rect = @paper.rect(@fieldSize * col, @fieldSize * rowNr, @fieldSize, @fieldSize, 5)
-                rect.attr fill: UI.colorMap[colorIndex]
-                @backgroundPieces[rowNr][col] = rect
+    swap: (callback) ->
+        @_swapBackground(callback)
+        @_swapPieces()
     
-    swapBackground: (callback) ->
+    getNickName: (testCallback) ->
+        $('#startButton').click () =>
+            getNickBox = $.fancybox(
+                title: 'Nicknamen wählen…',
+                href: '#getPlayerName',
+                transitionIn: 'none',
+                transitionOut: 'none',
+                modal: on,
+                'onStart': (() ->
+                    ok = $.fancybox.close
+                    getNew = (errorMsg) ->
+                        error = $('#nicknameErrorMsg')
+                        $('span.msg', error).text(errorMsg)
+                        if error.is(':hidden')
+                            error.slideDown('slow')
+                        else
+                            error.effect('highlight', {}, 2000)
+                    event = () ->
+                        nick = $('#nickname').val()
+                        testCallback(nick, (ok: ok, getNew: getNew))
+                    $('#chooseNickname').click(event))
+            )
+    
+    ###
+    - private methods
+    ###
+    
+    _swapBackground: (callback) ->
         animationObj = null
         time = UI.swapTime
         @swapped = !@swapped
@@ -104,14 +121,31 @@ class UIField
                         callback?()
                     me.animate attr, time
     
-    swapPieces: () ->
+    _drawProgressBar: () ->
+        width = @progressBar.width
+        r = @progressBar.height / 2
+        a = r / 2
+        n = Math.round((width + a) / (2 * r + a))
+        a = (width - n * 2 * r) / (n - 1)
+        hue = 0
+        step = 360 / n
+        balls = []
+        for i in [1..n]
+            newHue = hue + step
+            balls.push @progressBar.circle((2 * r + a) * (i - 1) + r, r, r).attr(fill: "0-hsb(#{hue}°, .5, .5)-hsb(#{newHue}°, .5, .5)", 'fill-opacity': '50%')
+            hue = newHue
+        balls
+    
+    _drawBackground: ->
+        for rowData, rowNr in fieldRows
+            for colorIndex, col in rowData
+                rect = @paper.rect(@fieldSize * col, @fieldSize * rowNr, @fieldSize, @fieldSize, 5)
+                rect.attr fill: UI.colorMap[colorIndex]
+                @backgroundPieces[rowNr][col] = rect
+    
+    _swapPieces: () ->
         for pieceID, piece of @pieces
             piece.swap(@backgroundPieces["1-7"])
-    
-    swap: (callback) ->
-        this.swapBackground(callback)
-        this.swapPieces()
-
 
 class UIGamingPiece
     
@@ -119,9 +153,68 @@ class UIGamingPiece
         @swapped = false
         @row = @piece.getRow()
         @col = @piece.getCol()
-        @set = @drawPiece()
+        @set = @_drawPiece()
     
-    drawPiece: () ->
+    swap: (withExtObj) ->
+        time = UI.swapTime
+
+        fieldSize = @field.getFieldSize()
+        paper = @field.paper
+
+        oldCol = @col
+        oldRow = @row
+        if @swapped
+            oldCol = 7 - oldCol
+            oldRow = 7 - oldRow
+
+        @swapped = !@swapped
+
+        getEllipseAnimAttr = (obj) =>
+            animAttr = 
+                "50%" : (cx: (7 - oldCol) * fieldSize + (obj.attr('cx')-oldCol*fieldSize))
+                "100%": (cy: (7 - oldRow) * fieldSize + (obj.attr('cy')-oldRow*fieldSize))
+            return animAttr
+
+        animElems = []
+
+        animTopEllipse =
+            elem: @set[0]
+            attr: getEllipseAnimAttr(@set[0])
+        animElems.push(animTopEllipse)
+
+        yDiffPath = @_getBottomEllipsePathStr(oldRow, 7-oldCol)
+        animBottomEllipse =
+            elem: @set[1]
+            attr:
+                "50%" : (path: yDiffPath, callback: () => @set[1].attr(path: yDiffPath))
+                "100%": (path: @_getBottomEllipsePathStr(7-oldRow, 7-oldCol))
+        animElems.push(animBottomEllipse)
+
+        animEllipseColor =
+            elem: @set[2]
+            attr: getEllipseAnimAttr(@set[2])
+        animElems.push(animEllipseColor)
+
+
+        for tooth in @set[3]
+            for elem in tooth
+                animDragonTooth =
+                    elem: elem
+                    attr: getEllipseAnimAttr(elem)
+                animElems.push(animDragonTooth)
+
+        for {elem, attr} in animElems
+            if withObj
+                elem.animateWith withObj, attr, time
+            else
+                elem.animate attr, time
+                withObj = elem
+    
+    ###
+    - private methods
+    ###
+    
+    _drawPiece: () ->
         fieldSize = @field.getFieldSize()
         paper = @field.paper
         
@@ -137,7 +230,7 @@ class UIGamingPiece
         ry = fieldSize * 0.5 * 0.6
         top = fieldSize * (@row + 0.49)
         
-        bottom = paper.path(@getBottomEllipsePathStr(@row, @col, fieldSize, fieldSize)).
+        bottom = paper.path(@_getBottomEllipsePathStr(@row, @col, fieldSize, fieldSize)).
             attr(fill: "15-#{color}").attr(strokeAttr)
         
         ellipseTop = paper.ellipse(fieldSize * (@col + 0.5), top, rx, ry).
@@ -173,62 +266,7 @@ class UIGamingPiece
         set.push(ellipseTop, bottom, ellipseColor, dragonTeeth)
         set
     
-    swap: (withExtObj) ->
-        time = UI.swapTime
-        
-        fieldSize = @field.getFieldSize()
-        paper = @field.paper
-        
-        oldCol = @col
-        oldRow = @row
-        if @swapped
-            oldCol = 7 - oldCol
-            oldRow = 7 - oldRow
-        
-        @swapped = !@swapped
-        
-        getEllipseAnimAttr = (obj) =>
-            animAttr = 
-                "50%" : (cx: (7 - oldCol) * fieldSize + (obj.attr('cx')-oldCol*fieldSize))
-                "100%": (cy: (7 - oldRow) * fieldSize + (obj.attr('cy')-oldRow*fieldSize))
-            return animAttr
-        
-        animElems = []
-        
-        animTopEllipse =
-            elem: @set[0]
-            attr: getEllipseAnimAttr(@set[0])
-        animElems.push(animTopEllipse)
-        
-        yDiffPath = @getBottomEllipsePathStr(oldRow, 7-oldCol)
-        animBottomEllipse =
-            elem: @set[1]
-            attr:
-                "50%" : (path: yDiffPath, callback: () => @set[1].attr(path: yDiffPath))
-                "100%": (path: @getBottomEllipsePathStr(7-oldRow, 7-oldCol))
-        animElems.push(animBottomEllipse)
-        
-        animEllipseColor =
-            elem: @set[2]
-            attr: getEllipseAnimAttr(@set[2])
-        animElems.push(animEllipseColor)
-        
-        
-        for tooth in @set[3]
-            for elem in tooth
-                animDragonTooth =
-                    elem: elem
-                    attr: getEllipseAnimAttr(elem)
-                animElems.push(animDragonTooth)
-        
-        for {elem, attr} in animElems
-            if withObj
-                elem.animateWith withObj, attr, time
-            else
-                elem.animate attr, time
-                withObj = elem
-    
-    getBottomEllipsePathStr: (row, col) ->
+    _getBottomEllipsePathStr: (row, col) ->
         fieldSize = @field.getFieldSize()
         diff = 0.15
         rx = fieldSize * 0.5 * 0.9

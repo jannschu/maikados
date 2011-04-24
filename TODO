@@ -15,14 +15,18 @@ UI
   + beim Einfügen/Updaten der Spielsteine umrechnen
   + beim Einlesen von Spielzügen umrechnen
 
+* Züge einlesen:
+  Mögliche Felder werden leuchten (siehe UIField._highlightFields). Beim ersten Zug muss Stein
+  auch ausgewählt werden. Die Anweisung mit den möglichen Steinen/Feldern kommt vom
+  Server.
+
 * "PopUp" für: KI j/n
 
 * Animation
-  + von gegnerischen Zügen
+  + von Zügen (Server schickt Zug)
   + von gekickten Steinen (Raphael: animation -> cubic-bezier)
   + vom Hinzufügen von Drachenzähnen (von oben "drauffallen" (schneller werden, etwas hochspringen vielleicht))
   + von blockierten Steinen (könnten zittern & Benachrichtigung)
-    http://www.nextcode.it/demo/vibrate/index.php
   + eines Siegs/Niederlage
     Vorschlag: SVG-Symbol einer Strichfigur im Jubel/hängendem Kopf auf
     gegrautem Hintergrund von 0 einblenden (scale: 1.0), dabei (bunter) Schriftzug:
@@ -32,15 +36,9 @@ UI
 * Darstellung von Spielernamen & was zur Zeit geschieht (wer ist dran, Verbindungsaufbau etc => Status).
   Sollte mit jQuery in HTML schnell erledigt sein.
 
-* Züge einlesen:
-  Mit Beachtung der Begrenzung was Zugweite/-richtung angeht (siehe Anleitung).
-  Mögliche Felder könnten vielleicht etwas glimmen. Beim ersten Zug muss Stein
-  auch ausgewählt werden (auch glimmen (?)).
-  
-  Nützlich vielleicht: https://github.com/redbeard-tech/raphael_glow_shadow
 
 Socket/Spielablauf
-==================
+------------------
 
   http://socket.io
 

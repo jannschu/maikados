@@ -25,18 +25,29 @@
 -export([init/1, handle_event/2,
     handle_call/2, handle_info/2, code_change/3, terminate/2]).
 
--export([start/0, handle_request/3]).
+-export([start_link/0, handle_request/3]).
 
 %% --------------------------------------
 %% @doc Starts to listen, registers event callback
 %% @end
 %% --------------------------------------
-start() ->
-    {ok, Pid} = socketio_listener:start([{http_port, 7878},
-                                         {default_http_handler, ?MODULE}]),
-    erlang:link(Pid),
+start_link() ->
+    Pid = try socketio_listener:start([{http_port, 7878},
+                                         {default_http_handler, ?MODULE}]) of
+        {ok, P} -> P
+    catch
+        error -> socketio_listener:server(socketio_listener_sup)
+    end,
     EventMgr = socketio_listener:event_manager(Pid),
-    ok = gen_event:add_handler(EventMgr, ?MODULE, []).
+    ok = gen_event:add_handler(EventMgr, ?MODULE, []),
+    {ok, spawn_link(fun() ->
+        process_flag(trap_exit, true),
+        link(Pid),
+        receive
+            {'EXIT', Pid, _Reason} ->
+                ok
+        end
+    end)}.
 
 %%% ======================================
 %%% gen_event CALLBACKS
@@ -49,6 +60,7 @@ init([Pid]) ->
     {ok, Pid}.
 
 handle_event({client, Client}, State) ->
+    error_logger:info_msg("New client connected~n"),
     ClientServer = maikados_client_sup:new_client(Client),
     NewState = dict:store(Client, ClientServer, State),
     EventMgr = socketio_client:event_manager(Client),
@@ -60,6 +72,7 @@ handle_event({message, _Client, #msg{ content = Content }}, Pid) ->
     {ok, Pid};
 
 handle_event({disconnect, Client}, State) ->
+    error_logger:info_msg("Client disconnected~n"),
     case dict:find(Client, State) of
         {ok, ClientPid} ->
             maikados_client:stop(ClientPid);
@@ -94,33 +107,25 @@ terminate(_Reason, _State) ->
 %% @see start()
 %% @private
 %% --------------------------------------
-handle_request(_Method, _Path, Req) ->
-    Path = check_for_index(case Req:get(uri_unquoted) of
-        [$/|P] ->
-            P;
-        P -> P
-    end),
-    WhiteList = [
-        "index.html",
-        "lib/socket.io/socket.io.min.js",
-        "resources/master.css",
-        "lib/raphael/raphael.js",
-        "resources/maikados.js",
-        "resources/gplv3-88x31.png",
-        "favicon.ico"
-    ],
-    case lists:any(fun(El) -> El =:= Path end, WhiteList) of
-        true ->
-            File = "../" ++ Path,
-            case filelib:is_file(File) of
+handle_request(_Method, Path, Req) ->
+    case is_valid_path(Path) of
+        {true, File} ->
+            FilePath = "../" ++ File,
+            case filelib:is_file(FilePath) of
                 true ->
-                    Req:file(File);
+                    Req:file(FilePath);
                 false ->
                     Req:respond(404)
             end;
         false ->
+            error_logger:info_msg("Forbidden file requested: ~p~n", [Path]),
             Req:respond(403)
     end.
 
-check_for_index("") -> "index.html";
-check_for_index(Any) -> Any.
+is_valid_path([]) -> {true, "index.html"};
+is_valid_path(["lib"|_Rest] = Path) -> {true, filename:join(Path)};
+is_valid_path(["resources"|_Rest] = Path) -> {true, filename:join(Path)};
+is_valid_path(["index.html" = Path]) -> {true, Path};
+is_valid_path(["favicon.ico" = Path]) -> {true, Path};
+
+is_valid_path(_Any) -> false.

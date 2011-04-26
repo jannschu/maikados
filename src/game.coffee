@@ -52,9 +52,10 @@ class MaikadosGame extends GameState
             Math.round(Math.random() * (max - min)) + min
         dA = rand(0, 7)
         dB = rand(0, 7)
+        _b = [0, 0, 0, 2, 1, 0, 0, 0]
         for x in [0..7]
-            a = new GamingPiece(7-x, 0 + rand(0, 3), x, 0)
-            b = new GamingPiece(x, 7 - rand(0, 3), x, 1)
+            a = new GamingPiece(7-x, 0, x, 0)
+            b = new GamingPiece(x, 7 - _b[x], x, 1)
             a.setDragonTooths 3 if x is dA
             b.setDragonTooths 2 if x is dB
             
@@ -71,13 +72,13 @@ class MaikadosGame extends GameState
         
         ui = @ui
         foo = () ->
-            ui.getMoveDestination("1-7", [0, 9, 18, 27, 36, 45, 54, 63], bar)
+            ui.getMoveDestination("1-2", [51, 44, 37], bar)
         bar = (destField) ->
             console.debug(destField)
-            ui.doMove("1-7", destField, baz)
+            ui.doMove("1-2", destField, baz)
         baz = () ->
             ui.postNotification("Move complete.")
-        @ui.getPieceSelection([ "1-7" ], foo)
+        @ui.getPieceSelection([ "1-2" ], foo)
         
         
         #$(@ui.paper.canvas).click (event) =>

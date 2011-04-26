@@ -6,9 +6,8 @@
 	z-index: 100000;
 	
 	/* set maximum number of notes to show */
-	max-height: 270px;
-	overflow-x: hidden;
-	overflow-y: auto;
+	height: 100%;
+	overflow: hidden;
 }
 
 .jnotify-container .jnotify-notification {

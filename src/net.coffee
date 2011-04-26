@@ -20,14 +20,46 @@ class NetConnection
     constructor: () ->
         @socket = new io.Socket()
         @callbackObjects = []
-        @socket.connect()
         
         @socket.on 'message', (msg) =>
-            (obj.sendEvent 'packet', msg) for obj in @callbackObjects
-        
-        
-        
+            return unless (cmd = ProtocolMessages[msg.__cmd])
+            result = new cmd(msg)
+            for obj in @callbackObjects
+                obj(result)
+    
+    connect: () ->
+        @socket.connect()
+    
     # callback should be an instance of GameState
     onMessage: (callback) ->
         @callbackObjects.push callback
     
+    send: (aMsgObj) ->
+        @socket.send aMsgObj.toJSONObject()
+
+class ProtocolMessage
+
+    toJSONObject: () ->
+        obj = {'__cmd': @__cmd}
+        for name, value of this
+            if @hasOwnProperty(name) and name.toString()[0] isnt '_'
+                obj[name] = value
+        obj
+
+ProtocolMessages = {}
+
+ProtocolMessages[0] =
+class ClientLoginMsg extends ProtocolMessage
+    
+    constructor: ({@name}) ->
+        
+
+ProtocolMessages[1] =
+class ServerResponseCode extends ProtocolMessages
+    
+    constructor: ({@code}) ->
+        
+
+for cmdNr, msg of ProtocolMessages
+    msg.prototype.__cmd = parseInt(cmdNr)
+     

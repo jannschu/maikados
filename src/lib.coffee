@@ -21,6 +21,4 @@ class GameState
         @_currentState = initState
     
     sendEvent: (type, msg) ->
-        @_currentState = this[@currentState](type, msg)
-
-        
+        @_currentState = this[@_currentState](type, msg)

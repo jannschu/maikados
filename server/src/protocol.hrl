@@ -16,17 +16,22 @@
 %%% ======================================
 %%%     commands
 %%% ======================================
+
 -record(clt_login, {name}).
+-record(srv_response_code, {code}).
 
 -ifdef(DEFINE_PROTCOL_COMMAND_FUNCTIONS).
 
 cmd2nr(clt_login) -> {ok, 0};
+cmd2nr(srv_response_code) -> {ok, 1};
 cmd2nr(_) -> error.
 
 nr2cmd(0) -> {ok, clt_login};
+nr2cmd(1) -> {ok, srv_response_code};
 nr2cmd(_) -> error.
 
 cmd_fields(clt_login) -> {ok, [name]};
+cmd_fields(srv_response_code) -> {ok, [code]};
 cmd_fields(_) -> error.
 
 -endif.

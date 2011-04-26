@@ -67,8 +67,17 @@ handle_event({client, Client}, State) ->
     ok = gen_event:add_handler(EventMgr, ?MODULE, [ClientServer]),
     {ok, NewState};
 
-handle_event({message, _Client, #msg{ content = Content }}, Pid) ->
-    maikados_client:receive_msg(Pid, Content),
+handle_event({message, _Client, #msg{ content = Content, json = Json }}, Pid) when Json =:= true ->
+    case maikados_protocol:packet_to_record(Content) of
+        {ok, Record} ->
+            maikados_client:receive_msg(Pid, Record);
+        error ->
+            error_logger:info_msg("Unknown packet received: ~p~n", [Content])
+    end,
+    {ok, Pid};
+
+handle_event({message, _Client, #msg{ content = Content}}, Pid) ->
+    error_logger:info_msg("Plain message received: ~p~n", [Content]),
     {ok, Pid};
 
 handle_event({disconnect, Client}, State) ->

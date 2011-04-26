@@ -72,12 +72,12 @@ class MaikadosGame extends GameState
         
         ui = @ui
         foo = () ->
-            ui.getMoveDestination("1-2", [51, 44, 37], bar)
+            ui.getMoveDestination("1-7", [51, 44, 37], bar)
         bar = (destField) ->
-            ui.doMove("1-2", destField, baz)
+            ui.doMove("1-7", destField, baz)
         baz = () ->
             ui.postNotification("Move complete.")
-        @ui.getPieceSelection([ "1-2" ], foo)
+        @ui.getPieceSelection([ "1-7" ], foo)
         
         
         #$(@ui.paper.canvas).click (event) =>

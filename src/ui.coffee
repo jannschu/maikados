@@ -73,6 +73,7 @@ class UIField
     
     addGamingPiece: (piece) ->
         @pieces[piece.getID()] ?= new UIGamingPiece(piece, this)
+        @lastPieceID = piece.getID()
     
     setProgressBar: (val) ->
         return unless 0 <= val <= 100
@@ -150,10 +151,11 @@ class UIField
             field = destField
         row = Math.floor field / 8
         col = field - row * 8
-        @pieces[pieceID].insertAfter(@pieces["1-7"])
+        if pieceID != @lastPieceID
+            @pieces[pieceID].insertAfter(@pieces[@lastPieceID])
+            @lastPieceID = pieceID
         @pieces[pieceID].move(row, col, () =>
             @_highlightFields([0..63])
-            @pieces[pieceID].insertBefore(@pieces["1-7"])
             callback()
         )
     

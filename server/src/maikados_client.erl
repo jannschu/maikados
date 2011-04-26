@@ -87,5 +87,5 @@ terminate(_Reason, _StateName, _StateData) ->
 send_msg(#client{socket = Pid}, [_Foo] = Msg) -> send_msg(Pid, Msg, true);
 send_msg(#client{socket = Pid}, Msg) -> send_msg(Pid, Msg, false).
 
-send_msg(#client{socket = Pid}, Msg, Json) ->
+send_msg(Pid, Msg, Json) ->
     socketio_client:send(Pid, #msg{ content = Msg, json = Json }).

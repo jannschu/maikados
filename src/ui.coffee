@@ -126,7 +126,9 @@ class UIField
                 field = 63-field
             row = Math.floor field / 8
             col = field - row * 8
-            $(@backgroundPieces[row][col].node).click( eval("function(){ callback("+field+") }") )
+            do (field) =>
+                elem = @backgroundPieces[row][col].node
+                $(elem).click(() -> callback(field))
         @_highlightFields(validFields)
     
     doMove: (pieceID, destField, callback) ->

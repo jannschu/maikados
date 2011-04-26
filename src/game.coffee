@@ -74,7 +74,6 @@ class MaikadosGame extends GameState
         foo = () ->
             ui.getMoveDestination("1-2", [51, 44, 37], bar)
         bar = (destField) ->
-            console.debug(destField)
             ui.doMove("1-2", destField, baz)
         baz = () ->
             ui.postNotification("Move complete.")

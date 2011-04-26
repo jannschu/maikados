@@ -154,7 +154,7 @@ class UIField
         @pieces[pieceID].move(row, col, () =>
             @_highlightFields([0..63])
             @pieces[pieceID].insertBefore(@pieces["1-7"])
-            callback
+            callback()
         )
     
     ###

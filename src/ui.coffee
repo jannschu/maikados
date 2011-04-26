@@ -115,6 +115,12 @@ class UIField
         elem = $("#svg-#{sign}").clone().attr(id: null)
         $.jnotify(msg, create: (e) -> $('.jnotify-message', e).prepend(elem))
     
+    getPieceSelection: (validPieces, callback) ->
+        for piece in validPieces
+            alert("#" + piece)
+            $("#" + piece).click(callback)
+            $("#" + piece).trigger("click")
+    
     ###
     - private methods
     ###

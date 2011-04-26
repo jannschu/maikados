@@ -58,6 +58,10 @@ class MaikadosGame extends GameState
             window.setTimeout countDown, 500
         countDown()
         
+        foo = () ->
+            alert("foo")
+        @ui.getPieceSelection([ "1-7" ], foo)
+        
         $(@ui.paper.canvas).click (event) =>
             @ui.swap()
     

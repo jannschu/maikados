@@ -117,9 +117,7 @@ class UIField
     
     getPieceSelection: (validPieces, callback) ->
         for piece in validPieces
-            alert("#" + piece)
-            $("#" + piece).click(callback)
-            $("#" + piece).trigger("click")
+            $("#piece-" + piece).click(callback)
     
     ###
     - private methods
@@ -281,7 +279,7 @@ class UIGamingPiece
         # create a new SVG group for this piece
         svgns = "http://www.w3.org/2000/svg"
         group = document.createElementNS(svgns, "g")
-        group.setAttributeNS(svgns, "id", @piece.getID())
+        group.id = "piece-" + @piece.getID()
         paper.canvas.appendChild(group)
         
         [bg, color] = if @piece.getSide() is 0 then ['#1B1B1B', '#333-#1B1B1B'] else ['#EEE', '#CCC-#EEE']

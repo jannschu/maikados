@@ -272,6 +272,12 @@ class UIGamingPiece
         fieldSize = @field.getFieldSize()
         paper = @field.paper
         
+        # create a new SVG group for this piece
+        svgns = "http://www.w3.org/2000/svg"
+        group = document.createElementNS(svgns, "g")
+        group.setAttributeNS(svgns, "id", @piece.getID())
+        paper.canvas.appendChild(group)
+        
         [bg, color] = if @piece.getSide() is 0 then ['#1B1B1B', '#333-#1B1B1B'] else ['#EEE', '#CCC-#EEE']
         strokeAttr =
             stroke: (if @piece.getSide() is 0 then 'black' else '#737373'),
@@ -286,13 +292,16 @@ class UIGamingPiece
         
         bottom = paper.path(@_getBottomEllipsePathStr(@row, @col, fieldSize, fieldSize)).
             attr(fill: "15-#{color}").attr(strokeAttr)
+        group.appendChild(bottom.node)
         
         ellipseTop = paper.ellipse(fieldSize * (@col + 0.5), top, rx, ry).
             attr(fill: "60-#{color}").attr(strokeAttr)
+        group.appendChild(ellipseTop.node)
         
         bg = Raphael.getRGB(bg)
         ellipseColor = paper.ellipse(fieldSize * (@col + 0.5), top, rx, ry).
             attr(fill: "r(.5,.6)#{UI.colorMap[@piece.getColorID()]}:5%-rgba(#{bg.r},#{bg.g},#{bg.b},0)", stroke: 'none', opacity: 0)
+        group.appendChild(ellipseColor.node)
         
         # dragon tooths
         r = fieldSize * 0.15
@@ -305,17 +314,22 @@ class UIGamingPiece
         ][@piece.getDragonTooths()]
         
         dragonTeeth = []
+        currentTooth = []
         
         for [x, y] in dragonPositions
             deg = '200°'
-            dragonTeeth.push( [
+            currentTooth = [
                 paper.ellipse(x, y + r, r, r / 1.5).
                     attr(fill: "rhsb(#{deg},1,.25)-hsb(#{deg},1,.25)", stroke: 'none', opacity: 0),
                 paper.ellipse(x, y, r, r).
                     attr(fill: "r(.5,.9)hsb(#{deg},1,.75)-hsb(#{deg},.5,.25)", stroke: 'none'),
                 paper.ellipse(x, y, r - r/5, r - r/20).
                     attr(stroke: 'none', fill: 'r(.5,.1)#ccc-#ccc', opacity: 0)
-            ] )
+            ]
+            dragonTeeth.push(currentTooth)
+            group.appendChild(currentTooth[0].node)
+            group.appendChild(currentTooth[1].node)
+            group.appendChild(currentTooth[2].node)
         
         set.push(ellipseTop, bottom, ellipseColor, dragonTeeth)
         set

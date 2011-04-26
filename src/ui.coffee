@@ -21,6 +21,7 @@ UI = # UI constants
         '#80FF00', '#C9FFEB', '#8D0DCE', '#0017F1']
     
     swapTime: 2000
+    moveTime: 1500
 
 class UIField
     # TODO: full swap support (to be considered at drawing etc.)
@@ -118,6 +119,24 @@ class UIField
     getPieceSelection: (validPieces, callback) ->
         for piece in validPieces
             $("#piece-" + piece).click(callback)
+    
+    getMoveDestination: (pieceID, validFields, callback) ->
+        for field in validFields
+            if @swapped
+                field = 63-field
+            row = Math.floor field / 8
+            col = field - row * 8
+            $(@backgroundPieces[row][col].node).click( eval("function(){ callback("+field+") }") )
+        @_highlightFields(validFields)
+    
+    doMove: (pieceID, destField, callback) ->
+        if @swapped
+            field = 63-destField
+        else
+            field = destField
+        row = Math.floor field / 8
+        col = field - row * 8
+        @pieces[pieceID].move(row, col, callback)
     
     ###
     - private methods
@@ -267,6 +286,68 @@ class UIGamingPiece
             else
                 elem.animate attr, time
                 withObj = elem
+    
+    # TODO: create _move() function which does ONLY does the animation etc. so we can use that in swap() and move()
+    move: (destRow, destCol, callback) -> # uses post-swap positions (i.e. gfx positions, not the "true" ones)
+        time = UI.moveTime
+        
+        fieldSize = @field.getFieldSize()
+        paper = @field.paper
+
+        oldCol = @col
+        oldRow = @row
+        
+        
+        if @swapped
+            @col = 7 - destCol
+            @row = 7 - destRow
+        else
+            @col = destCol
+            @row = destRow
+        
+        @piece.col = @col
+        @piece.row = @row
+        
+        getEllipseAnimAttr = (obj) =>
+            animAttr = 
+                cx: destCol * fieldSize + (obj.attr('cx')-oldCol*fieldSize)
+                cy: destRow * fieldSize + (obj.attr('cy')-oldRow*fieldSize)
+            return animAttr
+
+        animElems = []
+
+        animTopEllipse =
+            elem: @set[0]
+            attr: getEllipseAnimAttr(@set[0])
+        animElems.push(animTopEllipse)
+
+        yDiffPath = @_getBottomEllipsePathStr(oldRow, 7-oldCol)
+        animBottomEllipse =
+            elem: @set[1]
+            attr: {path: @_getBottomEllipsePathStr(destRow, destCol)}
+        animElems.push(animBottomEllipse)
+
+        animEllipseColor =
+            elem: @set[2]
+            attr: getEllipseAnimAttr(@set[2])
+        animElems.push(animEllipseColor)
+
+
+        for tooth in @set[3]
+            for elem in tooth
+                animDragonTooth =
+                    elem: elem
+                    attr: getEllipseAnimAttr(elem)
+                animElems.push(animDragonTooth)
+        
+        
+        for {elem, attr} in animElems
+            if withObj
+                elem.animateWith withObj, attr, time
+            else
+                elem.animate attr, time, callback # callback here because it will only be executed once, hopefully
+                withObj = elem
+
     
     ###
     - private methods

@@ -58,12 +58,19 @@ class MaikadosGame extends GameState
             window.setTimeout countDown, 500
         countDown()
         
+        ui = @ui
         foo = () ->
-            alert("foo")
+            ui.getMoveDestination("1-7", [0, 9, 18, 27, 36, 45, 54, 63], bar)
+        bar = (destField) ->
+            console.debug(destField)
+            ui.doMove("1-7", destField, baz)
+        baz = () ->
+            ui.postNotification("Move complete.")
         @ui.getPieceSelection([ "1-7" ], foo)
         
-        $(@ui.paper.canvas).click (event) =>
-            @ui.swap()
+        
+        #$(@ui.paper.canvas).click (event) =>
+        #    @ui.swap()
     
 
 $(document).ready ->

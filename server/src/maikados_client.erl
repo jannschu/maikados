@@ -62,7 +62,7 @@ init(SocketPid) ->
 
 login(Msg, State) ->
     error_logger:info_msg("Got message: ~p~n", [Msg]),
-    send_msg(State, [{<<"msg">>, 15}]),
+    send_msg(State, #srv_response_code{code = 25}),
     {next_state, login, State}.
 
 handle_event(stop, _StateName, State) ->
@@ -84,8 +84,9 @@ terminate(_Reason, _StateName, _StateData) ->
 %%%     helper
 %%% ======================================
 
-send_msg(#client{socket = Pid}, [_Foo] = Msg) -> send_msg(Pid, Msg, true);
-send_msg(#client{socket = Pid}, Msg) -> send_msg(Pid, Msg, false).
+send_msg(#client{socket = Pid}, Msg) -> send_msg(Pid, Msg, is_tuple(Msg)).
 
 send_msg(Pid, Msg, Json) ->
-    socketio_client:send(Pid, #msg{ content = Msg, json = Json }).
+    {ok, Content} = maikados_protocol:record_to_packet(Msg),
+    error_logger:info_msg("Send packet: ~p~n", [Content]),
+    socketio_client:send(Pid, #msg{ content = Content, json = Json }).

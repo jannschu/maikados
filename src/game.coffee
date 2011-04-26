@@ -19,20 +19,31 @@ class MaikadosGame extends GameState
     
     constructor: (@ui) ->
         super 'waitForStart'
-        @setupDebug()
-        @ui._registerHoverFun()
+        
         @ui.postNotification 'Offensichtlich ein Fehler. Mist.', 'warn'
         @ui.postNotification 'Sonst sieht es gut aus'
+        
         @ui.getNickName (nick, handling) =>
             handling.getNew('Dieser Nick ist leider schon weg')
+            # TODO: actually do a check
+            # @sendEvent('nick', nick)
             # handling.ok()
-            # TODO: actually do a check...
-    
+            # TODO: actually do a check
+        
+        @connection = new NetConnection
+        @connection.onMessage (msg) =>
+            @sendEvent 'message', msg
+        @connection.connect()
+        @connection.send new ClientLoginMsg(name: "Ralf")
+        
+        @setupDebug()
     ###
     - States
     ###
-    waitForStart: () ->
-        
+    waitForStart: (type, content) ->
+        if type is 'message' # got message over the socket
+            console.log content
+    
     ###
     - Helper
     ###
@@ -68,14 +79,3 @@ class MaikadosGame extends GameState
 
 $(document).ready ->
     new MaikadosGame(new UIField('game'))
-    
-    # socket = new io.Socket()
-    # socket.connect()
-    # socket.on 'connect', () ->
-    #     console.log('connection')
-    #     socket.send(from: 'me', for: 13)
-    # 
-    # socket.on 'message', (msg) ->
-    #     console.log('received', msg)
-    
-    

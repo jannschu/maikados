@@ -117,18 +117,30 @@ class UIField
         $.jnotify(msg, create: (e) -> $('.jnotify-message', e).prepend(elem))
     
     getPieceSelection: (validPieces, callback) ->
+        fields = []
         for piece in validPieces
-            $("#piece-" + piece).click(callback)
+            $("#piece-" + piece).click( () =>
+                $("#piece-" + piece).unbind("click")
+                callback()
+            )
+            fields.push(@pieces[piece].row * 8 + @pieces[piece].col) # TODO: swap
+        @_highlightFields(fields)
     
     getMoveDestination: (pieceID, validFields, callback) ->
+        clickableBackgroundPieces = []
         for field in validFields
             if @swapped
                 field = 63-field
             row = Math.floor field / 8
             col = field - row * 8
+            clickableBackgroundPieces.push(@backgroundPieces[row][col].node)
             do (field) =>
                 elem = @backgroundPieces[row][col].node
-                $(elem).click(() -> callback(field))
+                $(elem).click( () ->
+                    for tile in clickableBackgroundPieces
+                        $(tile).unbind("click")
+                    callback(field)
+                )
         @_highlightFields(validFields)
     
     doMove: (pieceID, destField, callback) ->
@@ -138,7 +150,12 @@ class UIField
             field = destField
         row = Math.floor field / 8
         col = field - row * 8
-        @pieces[pieceID].move(row, col, callback)
+        @pieces[pieceID].insertAfter(@pieces["1-7"])
+        @pieces[pieceID].move(row, col, () =>
+            @_highlightFields([0..63])
+            @pieces[pieceID].insertBefore(@pieces["1-7"])
+            callback
+        )
     
     ###
     - private methods
@@ -349,7 +366,33 @@ class UIGamingPiece
             else
                 elem.animate attr, time, callback # callback here because it will only be executed once, hopefully
                 withObj = elem
-
+    
+    insertAfter: (other) ->
+        lastOthElem = other.set[2]
+        for tooth in other.set[3]
+            lastOthElem = tooth[2]
+        this.forEachSetElem( (elem, prev) =>
+            if prev
+                lastOthElem = prev
+            elem.insertAfter(lastOthElem)
+        )
+    
+    insertBefore: (other) ->
+        lastOthElem = other.set[0]
+        this.forEachSetElem( (elem, prev) =>
+            elem.insertBefore(lastOthElem)
+        )
+    
+    forEachSetElem: (func) ->
+        func(@set[1])
+        func(@set[0], @set[1])
+        func(@set[2], @set[0])
+        previous = @set[2]
+        for tooth in @set[3]
+            for elem in tooth
+                func(elem, previous)
+                previous = elem
+    
     
     ###
     - private methods

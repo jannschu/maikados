@@ -28,6 +28,10 @@
 
 -export([start_link/1, receive_msg/2, stop/1]).
 
+-include("protocol.hrl").
+
+-record(client, {socket}).
+
 %% --------------------------------------
 %% @doc starts gen_fsm
 %% @end
@@ -54,10 +58,11 @@ receive_msg(Pid, Msg) ->
 %%% ======================================
 
 init(SocketPid) ->
-    {ok, login, SocketPid}.
+    {ok, login, #client{socket = SocketPid}}.
 
-login(_Msg, State) ->
-    send_msg(State, "Hello from Erlang!"),
+login(Msg, State) ->
+    error_logger:info_msg("Got message: ~p~n", [Msg]),
+    send_msg(State, [{<<"msg">>, 15}]),
     {next_state, login, State}.
 
 handle_event(stop, _StateName, State) ->
@@ -79,5 +84,8 @@ terminate(_Reason, _StateName, _StateData) ->
 %%%     helper
 %%% ======================================
 
-send_msg(Pid, Msg) ->
-    socketio_client:send(Pid, #msg{ content = Msg }).
+send_msg(#client{socket = Pid}, [_Foo] = Msg) -> send_msg(Pid, Msg, true);
+send_msg(#client{socket = Pid}, Msg) -> send_msg(Pid, Msg, false).
+
+send_msg(#client{socket = Pid}, Msg, Json) ->
+    socketio_client:send(Pid, #msg{ content = Msg, json = Json }).

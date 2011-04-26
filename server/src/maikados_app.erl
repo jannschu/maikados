@@ -30,7 +30,6 @@
 %% @private
 %% --------------------------------------
 start(normal, _StartArgs) ->
-    maikados_client_listener:start(),
     supervisor:start_link({local, ?MODULE}, ?MODULE, []).
 
 %% --------------------------------------
@@ -56,6 +55,10 @@ init(_Args) ->
         {maikados_game_sup, {maikados_game_sup, start_link, []},
          permanent, infinity, supervisor, [maikados_game_sup]},
         {maikados_client_sup, {maikados_client_sup, start_link, []},
-         permanent, infinity, supervisor, [maikados_client_sup]}
+         permanent, infinity, supervisor, [maikados_client_sup]},
+        {maikados_client_listener, {maikados_client_listener, start_link, []},
+         permanent, 5000, worker, [maikados_client_listener]},
+        {maikados_players, {maikados_players, start_link, []},
+         permanent, 5000, worker, [maikados_players]}
     ],
     {ok, {{one_for_one, 5, 60}, Children}}.

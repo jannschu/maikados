@@ -4,11 +4,12 @@
   {agner, [{requires, ["socketio"]}]},
   {modules, [
     maikados_app,
-    maikados_game_sup,
+    maikados_client,
     maikados_client_listener,
-    maikados_game_sup,
     maikados_client_sup,
-    maikados_client
+    maikados_game_sup,
+    maikados_players,
+    maikados_protocol
   ]},
   {registered, []},
   {applications, [kernel, stdlib]},

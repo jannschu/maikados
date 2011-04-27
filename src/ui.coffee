@@ -17,8 +17,8 @@
 
 UI = # UI constants
     colorMap: [
-            '#FF4500', '#FE0009', '#1FA53A', '#FC599F',
-            '#FFBA00', '#0048AB', '#5D1E9B', '#610D00']
+            '#FF8000', '#F00', '#1FA53A', '#FC599F',
+            '#F6AB00', '#0048AB', '#5D1E9B', '#782201']
     
     swapTime: 2000
     moveTime: 1500
@@ -243,7 +243,7 @@ class UIField
     
     _swapPieces: () ->
         for pieceID, piece of @pieces
-            piece.swap(@backgroundPieces["1-7"])
+            piece.swap()
 
 class UIGamingPiece
     
@@ -253,54 +253,57 @@ class UIGamingPiece
         @col = @piece.getCol()
         @set = @_drawPiece()
     
-    swap: (withExtObj) ->
+    swap: () ->
         time = UI.swapTime
-
+        
         fieldSize = @field.getFieldSize()
         paper = @field.paper
-
-        oldCol = @col
-        oldRow = @row
+        
         if @swapped
-            oldCol = 7 - oldCol
-            oldRow = 7 - oldRow
-
+            oldCol = 7 - @col
+            oldRow = 7 - @row
+        else
+            oldCol = @col
+            oldRow = @row
+        
         @swapped = !@swapped
-
-        getEllipseAnimAttr = (obj) =>
+        
+        dx = (7 - 2 * oldCol) * fieldSize
+        dy = (7 - 2 * oldRow) * fieldSize
+        
+        id = "#{@piece.getID()}"
+        
+        getAnimAttr = (obj, opc) ->
+            fll = obj.attr 'fill'
             animAttr = 
-                "50%" : (cx: (7 - oldCol) * fieldSize + (obj.attr('cx')-oldCol*fieldSize))
-                "100%": (cy: (7 - oldRow) * fieldSize + (obj.attr('cy')-oldRow*fieldSize))
-            return animAttr
-
-        animElems = []
-
-        animTopEllipse =
-            elem: @set[0]
-            attr: getEllipseAnimAttr(@set[0])
-        animElems.push(animTopEllipse)
-
-        yDiffPath = @_getBottomEllipsePathStr(oldRow, 7-oldCol)
-        animBottomEllipse =
-            elem: @set[1]
-            attr:
-                "50%" : (path: yDiffPath, callback: () => @set[1].attr(path: yDiffPath))
-                "100%": (path: @_getBottomEllipsePathStr(7-oldRow, 7-oldCol))
-        animElems.push(animBottomEllipse)
-
-        animEllipseColor =
-            elem: @set[2]
-            attr: getEllipseAnimAttr(@set[2])
-        animElems.push(animEllipseColor)
-
-
-        for tooth in @set[3]
-            for elem in tooth
-                animDragonTooth =
-                    elem: elem
-                    attr: getEllipseAnimAttr(elem)
-                animElems.push(animDragonTooth)
-
+                "10%": (opacity: 0, fill: 'none')
+                "90%": (callback: () -> obj.translate(dx, dy))
+                "100%": (opacity: opc, fill: fll)
+        
+        getNoAnimAttr = (obj) ->
+            attrs =
+                "0%": (callback: () -> obj.attr(opacity: 0).translate(dx, dy))
+                "100%": (callback: () -> obj.attr opacity: 1)
+        
+        animElems = [
+            ( # the shadow
+                elem: @set[0]
+                attr: getAnimAttr(@set[0], 0)),
+            ( # the top circle
+                elem: @set[1]
+                attr: getAnimAttr(@set[1], 1))
+            ( # the color sign
+                elem: @set[2]
+                attr: getNoAnimAttr(@set[2]))
+                    
+        ]
+        
+        for tooth in @dragonToothPieces
+            for n in tooth
+                animElems.push(
+                    elem: n
+                    attr: getNoAnimAttr(n))
+        
         for {elem, attr} in animElems
             if withObj
                 elem.animateWith withObj, attr, time
@@ -331,8 +334,8 @@ class UIGamingPiece
         
         getEllipseAnimAttr = (obj) =>
             animAttr = 
-                cx: destCol * fieldSize + (obj.attr('cx')-oldCol*fieldSize)
-                cy: destRow * fieldSize + (obj.attr('cy')-oldRow*fieldSize)
+                cx: destCol * fieldSize + (obj.attr('cx') - oldCol*fieldSize)
+                cy: destRow * fieldSize + (obj.attr('cy') - oldRow*fieldSize)
             return animAttr
 
         animElems = []
@@ -404,76 +407,59 @@ class UIGamingPiece
         fieldSize = @field.getFieldSize()
         paper = @field.paper
         
-        # create a new SVG group for this piece
-        svgns = "http://www.w3.org/2000/svg"
-        group = document.createElementNS(svgns, "g")
-        group.id = "piece-" + @piece.getID()
-        paper.canvas.appendChild(group)
-        
-        [bg, color] = if @piece.getSide() is 0 then ['#1B1B1B', '#333-#1B1B1B'] else ['#EEE', '#CCC-#EEE']
-        strokeAttr =
-            stroke: (if @piece.getSide() is 0 then 'black' else '#737373'),
-            'stroke-width': 1
-        
-        diff = 0.15
+        # # create a new SVG group for this piece
+        # svgns = "http://www.w3.org/2000/svg"
+        # group = document.createElementNS(svgns, "g")
+        # group.id = "piece-" + @piece.getID()
+        # paper.canvas.appendChild(group)
         
         set = []
-        rx = fieldSize * 0.5 * 0.9
-        ry = fieldSize * 0.5 * 0.6
-        top = fieldSize * (@row + 0.49)
+        r = fieldSize * 0.5 * 0.8
         
-        bottom = paper.path(@_getBottomEllipsePathStr(@row, @col, fieldSize, fieldSize)).
-            attr(fill: "15-#{color}").attr(strokeAttr)
-        group.appendChild(bottom.node)
+        cx = fieldSize * (@col + 0.5)
+        cy = fieldSize * (@row + 0.5)
         
-        ellipseTop = paper.ellipse(fieldSize * (@col + 0.5), top, rx, ry).
-            attr(fill: "60-#{color}").attr(strokeAttr)
-        group.appendChild(ellipseTop.node)
+        set.push paper.circle(cx + r / 7, cy + r / 7, r * 1.05).
+            attr(fill: 'rblack:80%-rgba(0, 0, 0, 0)', stroke: 'none')
+        bg = ['#1B1B1B', '#EEE']
+        set.push paper.circle(cx, cy, r).
+            attr(
+                stroke: '#7E7E7E',
+                fill: bg[@piece.getSide()],
+                'stroke-width': 1)
         
-        bg = Raphael.getRGB(bg)
-        ellipseColor = paper.ellipse(fieldSize * (@col + 0.5), top, rx, ry).
-            attr(fill: "r(.5,.6)#{UI.colorMap[@piece.getColorID()]}:5%-rgba(#{bg.r},#{bg.g},#{bg.b},0)", stroke: 'none', opacity: 0)
-        group.appendChild(ellipseColor.node)
+        colorID = @piece.getColorID()
+        colorChar = @_fitPathInto(UICharaters[colorID], cx, cy, r)
+        set.push colorChar.attr(fill: UI.colorMap[colorID], stroke: 'none')
         
         # dragon tooths
-        r = fieldSize * 0.15
-        dragonPositions = [
-            [],
-            [[fieldSize * (@col + 0.38), top - ry * 0.9]],
-            [[fieldSize * (@col + 0.34), top - ry], [fieldSize * (@col + 0.66), top - ry]],
-            [[fieldSize * (@col + 0.5), top - ry], [fieldSize * (@col + 0.25), top - ry * 0.6], [fieldSize * (@col + 0.75), top - ry * 0.6]],
-            [[fieldSize * (@col + 0.35), top - ry * 0.9], [fieldSize * (@col + 0.18), top - ry / 3], [fieldSize * (@col + 0.65), top - ry * 0.9], [fieldSize * (@col + 0.82), top - ry / 3]]
-        ][@piece.getDragonTooths()]
+        @dragonToothPieces = []
         
-        dragonTeeth = []
-        currentTooth = []
-        
-        for [x, y] in dragonPositions
-            deg = '200°'
-            currentTooth = [
-                paper.ellipse(x, y + r, r, r / 1.5).
-                    attr(fill: "rhsb(#{deg},1,.25)-hsb(#{deg},1,.25)", stroke: 'none', opacity: 0),
-                paper.ellipse(x, y, r, r).
-                    attr(fill: "r(.5,.9)hsb(#{deg},1,.75)-hsb(#{deg},.5,.25)", stroke: 'none'),
-                paper.ellipse(x, y, r - r/5, r - r/20).
-                    attr(stroke: 'none', fill: 'r(.5,.1)#ccc-#ccc', opacity: 0)
-            ]
-            dragonTeeth.push(currentTooth)
-            group.appendChild(currentTooth[0].node)
-            group.appendChild(currentTooth[1].node)
-            group.appendChild(currentTooth[2].node)
-        
-        set.push(ellipseTop, bottom, ellipseColor, dragonTeeth)
+        dragonTeeth = @piece.getDragonTooths()
+        if dragonTeeth > 0
+            rr = r * 0.82
+            deltaDeg = 360 / 8
+            diffDeg = 360 / (4 * 8)
+            rad = Raphael.rad(diffDeg / 2)
+            size = Math.sin(rad) * rr * 2
+            y = cy - (size / 2 + Math.cos(rad) * rr)
+            path = 'M 4 0L0 6L4 5L8 6z'
+            initDegOffset = -(diffDeg / 2 * (dragonTeeth - 1)) 
+            for n in [1..dragonTeeth]
+                dragonToothPiece = []
+                for i in [0..7]
+                    angle = initDegOffset + i * deltaDeg + (n - 1) * diffDeg
+                    dragonToothPiece.push @_fitPathInto(path, cx, y, size).
+                        rotate(angle, cx, cy).attr(fill: bg[1 - @piece.getSide()], stroke: 'none')
+                @dragonToothPieces.push dragonToothPiece
         set
     
-    _getBottomEllipsePathStr: (row, col) ->
-        fieldSize = @field.getFieldSize()
-        diff = 0.15
-        rx = fieldSize * 0.5 * 0.9
-        ry = fieldSize * 0.5 * 0.6
-        topX = fieldSize * (row + 0.49)
-        length = fieldSize * diff
+    _fitPathInto: (path, cx0, cy0, width0, height0 = width0) ->
         
-        left = fieldSize * (col + (1 - 0.9) * 0.5)
+        elem = @field.paper.path(path)
+        {width, height} = elem.getBBox()
         
-        "M#{left},#{topX} v#{length} a#{rx},#{ry} 0 0 0 #{fieldSize * 0.9},0 v-#{length}Z"
+        elem.scale(Math.max(width0, height0) / Math.max(width, height))
+        {width, height, x, y} = elem.getBBox()
+        elem.translate((cx0 - width / 2) - x, (cy0 - height / 2) - y)
+

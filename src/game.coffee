@@ -77,11 +77,11 @@ class MaikadosGame extends GameState
             ui.doMove("1-7", destField, baz)
         baz = () ->
             ui.postNotification("Move complete.")
-        @ui.getPieceSelection([ "1-7" ], foo)
+        # @ui.getPieceSelection([ "1-7" ], foo)
         
         
-        #$(@ui.paper.canvas).click (event) =>
-        #    @ui.swap()
+        $(@ui.paper.canvas).click (event) =>
+           @ui.swap()
     
 
 $(document).ready ->

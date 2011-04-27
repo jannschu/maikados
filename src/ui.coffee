@@ -17,8 +17,8 @@
 
 UI = # UI constants
     colorMap: [
-        '#F00', '#F305FC', '#FF8000', '#F3F000',
-        '#80FF00', '#C9FFEB', '#8D0DCE', '#0017F1']
+            '#FF4500', '#FE0009', '#1FA53A', '#FC599F',
+            '#FFBA00', '#0048AB', '#5D1E9B', '#610D00']
     
     swapTime: 2000
     moveTime: 1500

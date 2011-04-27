@@ -58,7 +58,7 @@ class MaikadosGame extends GameState
             b = new GamingPiece(x, 7 - _b[x], x, 1)
             a.setDragonTooths 3 if x is dA
             b.setDragonTooths 2 if x is dB
-            
+            b.setDragonTooths 4 if x is 2
             @ui.addGamingPiece(a)
             @ui.addGamingPiece(b)
         
@@ -70,11 +70,14 @@ class MaikadosGame extends GameState
             window.setTimeout countDown, 500
         countDown()
         
+        @ui.doMove("1-2", 37, baz)
+        @ui._registerHoverFun()
+        
         ui = @ui
         foo = () ->
             ui.getMoveDestination("1-7", [51, 44, 37], bar)
         bar = (destField) ->
-            ui.doMove("1-7", destField, baz)
+            
         baz = () ->
             ui.postNotification("Move complete.")
         # @ui.getPieceSelection([ "1-7" ], foo)

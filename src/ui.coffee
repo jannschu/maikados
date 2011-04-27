@@ -18,7 +18,7 @@
 UI = # UI constants
     colorMap: [
             '#FF8000', '#F00', '#1FA53A', '#FC599F',
-            '#F6AB00', '#0048AB', '#5D1E9B', '#782201']
+            '#F6AB00', '#68CCFF', '#0048AB', '#5D1E9B']
     
     swapTime: 2000
     moveTime: 1500
@@ -151,13 +151,7 @@ class UIField
             field = destField
         row = Math.floor field / 8
         col = field - row * 8
-        if pieceID != @lastPieceID
-            @pieces[pieceID].insertAfter(@pieces[@lastPieceID])
-            @lastPieceID = pieceID
-        @pieces[pieceID].move(row, col, () =>
-            @_highlightFields([0..63])
-            callback()
-        )
+        @pieces[pieceID].move(row, col, callback)
     
     ###
     - private methods
@@ -188,14 +182,31 @@ class UIField
             fieldMap[i] = off
         for i in fields
             fieldMap[i] = on
-
+        
+        size = 2
+        
         for i, status of fieldMap
             row = Math.floor i / 8
             col = i - row * 8
             piece = @backgroundPieces[row][col]
-            opacity = if status then 1 else 0.2
+            
+            attrs = if status
+                (
+                    opacity: 1
+                    x: (col * @fieldSize)
+                    y: (row * @fieldSize)
+                    height: @fieldSize
+                    width: @fieldSize)
+            else
+                (
+                    opacity: 0.2
+                    x: (col * @fieldSize) + size / 2
+                    y: (row * @fieldSize) + size / 2
+                    height: @fieldSize - size
+                    width: @fieldSize - size)
+            
             piece.stop()
-            piece.animate(('fill-opacity': opacity), 300)
+            piece.animate(attrs, 300)
     
     _swapBackground: (callback) ->
         animationObj = null
@@ -317,10 +328,9 @@ class UIGamingPiece
         
         fieldSize = @field.getFieldSize()
         paper = @field.paper
-
+        
         oldCol = @col
         oldRow = @row
-        
         
         if @swapped
             @col = 7 - destCol
@@ -332,72 +342,36 @@ class UIGamingPiece
         @piece.col = @col
         @piece.row = @row
         
-        getEllipseAnimAttr = (obj) =>
-            animAttr = 
-                cx: destCol * fieldSize + (obj.attr('cx') - oldCol*fieldSize)
-                cy: destRow * fieldSize + (obj.attr('cy') - oldRow*fieldSize)
-            return animAttr
-
-        animElems = []
-
-        animTopEllipse =
-            elem: @set[0]
-            attr: getEllipseAnimAttr(@set[0])
-        animElems.push(animTopEllipse)
-
-        yDiffPath = @_getBottomEllipsePathStr(oldRow, 7-oldCol)
-        animBottomEllipse =
-            elem: @set[1]
-            attr: {path: @_getBottomEllipsePathStr(destRow, destCol)}
-        animElems.push(animBottomEllipse)
-
-        animEllipseColor =
-            elem: @set[2]
-            attr: getEllipseAnimAttr(@set[2])
-        animElems.push(animEllipseColor)
-
-
-        for tooth in @set[3]
+        dx = (@col - oldCol) * fieldSize
+        dy = (@row - oldRow) * fieldSize
+        attrs = (translation: "#{dx} #{dy}") 
+        
+        animElems = [
+            ( # shadow
+                elem: @set[0]
+                attr: attrs),
+            ( # top circle
+                elem: @set[1]
+                attr: attrs),
+            ( # color sign
+                elem: @set[2]
+                attr: attrs)
+        ]
+        
+        for tooth in @dragonToothPieces
             for elem in tooth
-                animDragonTooth =
+                animElems.push(
                     elem: elem
-                    attr: getEllipseAnimAttr(elem)
-                animElems.push(animDragonTooth)
+                    attr: attrs)
         
         
         for {elem, attr} in animElems
+            elem.toFront()
             if withObj
                 elem.animateWith withObj, attr, time
             else
                 elem.animate attr, time, callback # callback here because it will only be executed once, hopefully
                 withObj = elem
-    
-    insertAfter: (other) ->
-        lastOthElem = other.set[2]
-        for tooth in other.set[3]
-            lastOthElem = tooth[2]
-        this.forEachSetElem( (elem, prev) =>
-            if prev
-                lastOthElem = prev
-            elem.insertAfter(lastOthElem)
-        )
-    
-    insertBefore: (other) ->
-        lastOthElem = other.set[0]
-        this.forEachSetElem( (elem, prev) =>
-            elem.insertBefore(lastOthElem)
-        )
-    
-    forEachSetElem: (func) ->
-        func(@set[1])
-        func(@set[0], @set[1])
-        func(@set[2], @set[0])
-        previous = @set[2]
-        for tooth in @set[3]
-            for elem in tooth
-                func(elem, previous)
-                previous = elem
-    
     
     ###
     - private methods

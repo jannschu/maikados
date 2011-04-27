@@ -21,6 +21,7 @@ fs = require 'fs'
 appFiles = [ # in order of concatenation
     'lib',
     'gameobjects',
+    'ui-characters',
     'ui',
     'net',
     'game'

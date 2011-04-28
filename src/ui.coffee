@@ -151,7 +151,7 @@ class UIField
                 clickableBackgroundPieces.push(elem = @backgroundPieces[row][col].node)
                 $(elem).click( () =>
                     for tile in clickableBackgroundPieces
-                        $(tile).unbind("click")
+                        $(tile).unbind('click').unbind('mouseenter').unbind('mouseleave')
                     b.removeClass('pointer-cursor')
                     @_highlightFields([0..63])
                     window.setTimeout (() -> callback(field) if callback), 0

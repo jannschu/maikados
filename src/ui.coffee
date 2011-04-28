@@ -440,9 +440,10 @@ class UIGamingPiece
                 dragonToothPiece = []
                 for i in [0..7]
                     angle = initDegOffset + i * deltaDeg + (n - 1) * diffDeg
-                    dragonToothPiece.push @_fitPathInto(path, cx, y, size).
+                    el = @_fitPathInto(path, cx, y, size).
                         rotate(angle, cx, cy).attr(fill: bg[1 - @piece.getSide()], stroke: 'none')
-                $(group).append(dragonToothPiece)
+                    dragonToothPiece.push el
+                    $(group).append(el)
                 @dragonToothPieces.push dragonToothPiece
         
         set

@@ -46,9 +46,25 @@ class MaikadosGame extends GameState
     - Helper
     ###
     setupDebug: () ->
+        rand = (a, b) -> Math.round(Math.random() * (b - a)) + a
+        dragonPieceNr = () ->
+            p = rand 1, 31
+            if p < 2
+                4
+            else if p < 4
+                3
+            else if p < 8
+                2
+            else if p < 16
+                1
+            else 0
         for x in [0..7]
-            @ui.addGamingPiece(new GamingPiece(7-x, 0, x, 0))
-            @ui.addGamingPiece(new GamingPiece(x, 7, x, 1))
+            a = new GamingPiece(7-x, 0, x, 0)
+            b = new GamingPiece(x, 7, x, 1)
+            a.setDragonTooths(dragonPieceNr())
+            b.setDragonTooths(dragonPieceNr())
+            @ui.addGamingPiece(a)
+            @ui.addGamingPiece(b)
         
         pos = 100
         countDown = () =>

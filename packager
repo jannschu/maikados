@@ -1,0 +1,45 @@
+#!/usr/bin/env ruby
+require 'open-uri'
+
+def get(s)
+  open(s) { |f| f.read }
+end
+
+puts "Get dependencies..."
+`cake get-deps`
+puts "Build..."
+`cake build`
+puts "Create directories & copy binary files..."
+`mkdir -p maikados/resources`
+`mkdir -p maikados/lib/fancybox`
+`cp resources/* maikados/resources`
+`cp lib/fancybox/*.png maikados/lib/fancybox`
+`cp lib/fancybox/*.gif maikados/lib/fancybox`
+
+puts "Read index.html & get scripts and styles..."
+index = File.read 'index.html'
+css = ""
+index.gsub!(/<link[^>]*href="([^"]+)"[^>]*>/) { |path| css << get($1); '' }
+js = ""
+index.gsub!(/<script[^>]*src="([^"]+)"[^>]*><\/script>/) { |path| js << "\n\n" + get($1); '' }
+
+puts "Compress and save everything..."
+index.sub!(/(<head>.*?)\s*<\/head>/m) do
+  File.open('__temp__.js', 'w') { |f|
+    f.write js
+    `uglifyjs -o __temp__.js __temp__.js`
+  }
+  js = File.read('__temp__.js')
+  File.unlink('__temp__.js')
+  $1 +
+    "<style>" + css.gsub(/(\n+|\t+|\s{2,})|(\/\*.*?\*\/)/m, '') + "</style>" +
+    "<script>" + js + "</script>" +
+  '</head>'
+end
+
+index.gsub!(/(\s{2,})|(<!--(?!if).*?-->)/m, '')
+
+File.open('maikados/index.html', 'w') { |f| f.write index }
+`zip -9 -r maikados.zip maikados`
+`rm -Rf maikados`
+puts "Done."

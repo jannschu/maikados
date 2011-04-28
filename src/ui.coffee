@@ -96,7 +96,6 @@ class UIField
                 href: '#getPlayerName',
                 transitionIn: 'none',
                 transitionOut: 'none',
-                modal: on,
                 'onStart': (() ->
                     ok = $.fancybox.close
                     getNew = (errorMsg) ->

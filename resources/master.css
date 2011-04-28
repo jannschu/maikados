@@ -128,3 +128,7 @@ footer a {
     margin-top: -5px;
     margin-right: 10px;
 }
+
+.pointer-cursor:hover {
+    cursor: pointer;
+}

@@ -48,19 +48,9 @@ class MaikadosGame extends GameState
     - Helper
     ###
     setupDebug: () ->
-        rand = (min, max) ->
-            Math.round(Math.random() * (max - min)) + min
-        dA = rand(0, 7)
-        dB = rand(0, 7)
-        _b = [0, 0, 0, 2, 1, 0, 0, 0]
         for x in [0..7]
-            a = new GamingPiece(7-x, 0, x, 0)
-            b = new GamingPiece(x, 7 - _b[x], x, 1)
-            a.setDragonTooths 3 if x is dA
-            b.setDragonTooths 2 if x is dB
-            b.setDragonTooths 4 if x is 2
-            @ui.addGamingPiece(a)
-            @ui.addGamingPiece(b)
+            @ui.addGamingPiece(new GamingPiece(7-x, 0, x, 0))
+            @ui.addGamingPiece(new GamingPiece(x, 7, x, 1))
         
         pos = 100
         countDown = () =>
@@ -70,22 +60,11 @@ class MaikadosGame extends GameState
             window.setTimeout countDown, 500
         countDown()
         
-        @ui.doMove("1-2", 37, baz)
-        @ui._registerHoverFun()
-        
         ui = @ui
-        foo = () ->
-            ui.getMoveDestination("1-7", [51, 44, 37], bar)
-        bar = (destField) ->
             
-        baz = () ->
-            ui.postNotification("Move complete.")
-        # @ui.getPieceSelection([ "1-7" ], foo)
-        
-        
-        $(@ui.paper.canvas).click (event) =>
-           @ui.swap()
-    
+        @ui.getPieceSelection(("1-#{p}" for p in [0..7]), (pieceId) =>
+            @ui.postNotification("Piece #{pieceId} selected.")
+            console.log("move #{pieceId}"))
 
 $(document).ready ->
     new MaikadosGame(new UIField('game'))

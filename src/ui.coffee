@@ -118,13 +118,26 @@ class UIField
         $.jnotify(msg, create: (e) -> $('.jnotify-message', e).prepend(elem))
     
     getPieceSelection: (validPieces, callback) ->
+        # TODO: swap
         fields = []
+        elements = []
+        b = $('body')
         for piece in validPieces
-            $("#piece-" + piece).click( () =>
-                $("#piece-" + piece).unbind("click")
-                callback()
-            )
-            fields.push(@pieces[piece].row * 8 + @pieces[piece].col) # TODO: swap
+            do (piece) =>
+                {row, col} = @pieces[piece]
+                fields.push(row * 8 + col)
+                
+                el = $("#piece-#{piece}").add(@backgroundPieces[row][col].node)
+                elements.push(el)
+                el.hover((() -> b.addClass('pointer-cursor')),
+                         (() -> b.removeClass('pointer-cursor')))
+                
+                el.click () =>
+                    for e in elements
+                        e.unbind('click').unbind('mouseenter').unbind('mouseleave')
+                    b.removeClass('pointer-cursor')
+                    @_highlightFields([0..63])
+                    callback(piece)
         @_highlightFields(fields)
     
     getMoveDestination: (pieceID, validFields, callback) ->
@@ -381,11 +394,11 @@ class UIGamingPiece
         fieldSize = @field.getFieldSize()
         paper = @field.paper
         
-        # # create a new SVG group for this piece
-        # svgns = "http://www.w3.org/2000/svg"
-        # group = document.createElementNS(svgns, "g")
-        # group.id = "piece-" + @piece.getID()
-        # paper.canvas.appendChild(group)
+        # create a new SVG group for this piece
+        svgns = "http://www.w3.org/2000/svg"
+        group = document.createElementNS(svgns, "g")
+        group.id = "piece-" + @piece.getID()
+        paper.canvas.appendChild(group)
         
         set = []
         r = fieldSize * 0.5 * 0.8
@@ -406,6 +419,8 @@ class UIGamingPiece
         colorChar = @_fitPathInto(UICharaters[colorID], cx, cy, r)
         set.push colorChar.attr(fill: UI.colorMap[colorID], stroke: 'none')
         
+        $(group).append(setItem) for setItem in set
+        
         # dragon tooths
         @dragonToothPieces = []
         
@@ -425,7 +440,9 @@ class UIGamingPiece
                     angle = initDegOffset + i * deltaDeg + (n - 1) * diffDeg
                     dragonToothPiece.push @_fitPathInto(path, cx, y, size).
                         rotate(angle, cx, cy).attr(fill: bg[1 - @piece.getSide()], stroke: 'none')
+                $(group).append(dragonToothPiece)
                 @dragonToothPieces.push dragonToothPiece
+        
         set
     
     _fitPathInto: (path, cx0, cy0, width0, height0 = width0) ->

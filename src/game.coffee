@@ -20,9 +20,6 @@ class MaikadosGame extends GameState
     constructor: (@ui) ->
         super 'waitForStart'
         
-        @ui.postNotification 'Offensichtlich ein Fehler. Mist.', 'warn'
-        @ui.postNotification 'Sonst sieht es gut aus'
-        
         @ui.getNickName (nick, handling) =>
             handling.getNew('Dieser Nick ist leider schon weg')
             # TODO: actually do a check
@@ -37,6 +34,7 @@ class MaikadosGame extends GameState
         @connection.send new ClientLoginMsg(name: "Ralf")
         
         @setupDebug()
+    
     ###
     - States
     ###
@@ -60,11 +58,19 @@ class MaikadosGame extends GameState
             window.setTimeout countDown, 500
         countDown()
         
-        ui = @ui
-            
-        @ui.getPieceSelection(("1-#{p}" for p in [0..7]), (pieceId) =>
+        @ui.postNotification "Wähle einen Stein aus!"
+        @ui.getPieceSelection ("1-#{p}" for p in [0..7]), (pieceId) =>
             @ui.postNotification("Piece #{pieceId} selected.")
-            console.log("move #{pieceId}"))
+            fields = []
+            {row, col} = @ui.pieces[pieceId]
+            a = b = i = row * 8 + col
+            mod = (a, m) -> a - Math.floor(a/m) * m
+            (fields.push a) while ((a -= 9) % 8) >= 0 and (a % 8) < (i % 8) and  a > 7
+            (fields.push b) while ((b -= 7) % 8) > 0 and b > 7
+            (fields.push i) while (i -= 8) > 7
+                
+            @ui.getMoveDestination pieceId, fields, (selectedField) =>
+                @ui.doMove pieceId, selectedField
 
 $(document).ready ->
     new MaikadosGame(new UIField('game'))

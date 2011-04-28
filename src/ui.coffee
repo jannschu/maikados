@@ -58,7 +58,7 @@ class UIField
         
         $('#nicknameErrorMsg').prepend($('#svg-warn'))
         
-        $.jnotify.setup(delay: 5000)
+        $.jnotify.setup(delay: 8000)
         
         @pieces = {}
         @fieldSize = @paper.width / 8 # should be a square
@@ -211,7 +211,7 @@ class UIField
                     width: @fieldSize)
             else
                 (
-                    opacity: 0.2
+                    opacity: 0.5
                     x: (col * @fieldSize) + size / 2
                     y: (row * @fieldSize) + size / 2
                     height: @fieldSize - size

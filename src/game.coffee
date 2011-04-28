@@ -76,7 +76,6 @@ class MaikadosGame extends GameState
         
         @ui.postNotification "Wähle einen Stein aus!"
         @ui.getPieceSelection ("1-#{p}" for p in [0..7]), (pieceId) =>
-            @ui.postNotification("Piece #{pieceId} selected.")
             fields = []
             {row, col} = @ui.pieces[pieceId]
             a = b = i = row * 8 + col

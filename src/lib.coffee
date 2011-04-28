@@ -21,4 +21,5 @@ class GameState
         @_currentState = initState
     
     sendEvent: (type, msg) ->
-        @_currentState = this[@_currentState](type, msg)
+        window.setTimeout((() =>
+            @_currentState = this[@_currentState](type, msg)), 0)

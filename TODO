@@ -15,15 +15,9 @@ UI
   + beim Einfügen/Updaten der Spielsteine umrechnen
   + beim Einlesen von Spielzügen umrechnen
 
-* Züge einlesen:
-  Mögliche Felder werden leuchten (siehe UIField._highlightFields). Beim ersten Zug muss Stein
-  auch ausgewählt werden. Die Anweisung mit den möglichen Steinen/Feldern kommt vom
-  Server.
-
 * "PopUp" für: KI j/n
 
 * Animation
-  + von Zügen (Server schickt Zug)
   + von gekickten Steinen (Raphael: animation -> cubic-bezier)
   + vom Hinzufügen von Drachenzähnen (von oben "drauffallen" (schneller werden, etwas hochspringen vielleicht))
   + von blockierten Steinen (könnten zittern & Benachrichtigung)

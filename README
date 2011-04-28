@@ -1,10 +1,10 @@
 How to build (client)
 =====================
 
-Make sure the git submodules are cloned (`git submodule update').
+You need CoffeScript (tested with 1.0.1).
+Run `cake get-deps' and `cake build' after cloning the repo. 
 
-Install CoffeScript (tested with 1.0.1) and run `cake build'.
-The `maikados.js' should be in your directory now.
+Now open the `index.html' to see the client.
 
 Hints for developers (client)
 =============================

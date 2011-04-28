@@ -136,7 +136,7 @@ class UIField
                         e.unbind('click').unbind('mouseenter').unbind('mouseleave')
                     b.removeClass('pointer-cursor')
                     @_highlightFields([0..63])
-                    window.setTimoeut, (() -> callback(piece) if callback), 0
+                    window.setTimeout (() -> callback(piece) if callback), 0
         @_highlightFields(fields)
     
     getMoveDestination: (pieceID, validFields, callback) ->
@@ -154,7 +154,7 @@ class UIField
                         $(tile).unbind("click")
                     b.removeClass('pointer-cursor')
                     @_highlightFields([0..63])
-                    window.setTimoeut, (() -> callback(field) if callback), 0
+                    window.setTimeout (() -> callback(field) if callback), 0
                 ).hover((() -> b.addClass('pointer-cursor')),
                         (() -> b.removeClass('pointer-cursor')))
         @_highlightFields(validFields)

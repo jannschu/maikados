@@ -136,24 +136,27 @@ class UIField
                         e.unbind('click').unbind('mouseenter').unbind('mouseleave')
                     b.removeClass('pointer-cursor')
                     @_highlightFields([0..63])
-                    callback(piece)
+                    window.setTimoeut, (() -> callback(piece) if callback), 0
         @_highlightFields(fields)
     
     getMoveDestination: (pieceID, validFields, callback) ->
         clickableBackgroundPieces = []
+        b = $('body')
         for field in validFields
             if @swapped
                 field = 63-field
             row = Math.floor field / 8
             col = field - row * 8
-            clickableBackgroundPieces.push(@backgroundPieces[row][col].node)
             do (field) =>
-                elem = @backgroundPieces[row][col].node
-                $(elem).click( () ->
+                clickableBackgroundPieces.push(elem = @backgroundPieces[row][col].node)
+                $(elem).click( () =>
                     for tile in clickableBackgroundPieces
                         $(tile).unbind("click")
-                    callback(field)
-                )
+                    b.removeClass('pointer-cursor')
+                    @_highlightFields([0..63])
+                    window.setTimoeut, (() -> callback(field) if callback), 0
+                ).hover((() -> b.addClass('pointer-cursor')),
+                        (() -> b.removeClass('pointer-cursor')))
         @_highlightFields(validFields)
     
     doMove: (pieceID, destField, callback) ->

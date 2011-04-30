@@ -27,19 +27,20 @@ class GamingPiece
     getID: () ->
         @id
     
-    getDragonTooths: () ->
+    getDragonTeeth: () ->
         @dragonTooths
     
-    setDragonTooths: (value) ->
+    setDragonTeeth: (value) ->
         @dragonTooths = value if 0 <= value <= 4
     
     # 0 to 7
-    getRow: () ->
-        @row
+    getRow: () -> @row
+    setRow: (@row) -> this
+    
     
     # 0 to 7
-    getCol: () ->
-        @col
+    getCol: () -> @col
+    setCol: (@col) -> this
     
     # 0 (black) or 1 (white)
     getSide: () ->
@@ -49,3 +50,6 @@ class GameField
     
     constructor: () ->
         @pieces = {}
+    
+    addGamingPiece: (piece) ->
+        @pieces[piece.getID()] = piece

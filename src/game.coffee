@@ -77,10 +77,12 @@ class MaikadosGame extends GameState
         for x in [0..7]
             a = new GamingPiece(7-x, 0, x, 0)
             b = new GamingPiece(x, 7, x, 1)
-            a.setDragonTooths(dragonPieceNr())
-            b.setDragonTooths(dragonPieceNr())
-            @ui.addGamingPiece(a)
-            @ui.addGamingPiece(b)
+            a.setDragonTeeth(dragonPieceNr())
+            b.setDragonTeeth(dragonPieceNr())
+            @field.addGamingPiece(a)
+            @field.addGamingPiece(b)
+        
+        @ui.update()
         
         pos = 100
         countDown = () =>
@@ -101,7 +103,10 @@ class MaikadosGame extends GameState
             (fields.push i) while (i -= 8) > 7
                 
             @ui.getMoveDestination pieceId, fields, (selectedField) =>
-                @ui.doMove pieceId, selectedField
+                row = Math.floor(selectedField / 8)
+                col = selectedField - row * 8
+                @field.pieces[pieceId].setCol(col).setRow(row)
+                @ui.update()
 
 $( ->
     field = new GameField()

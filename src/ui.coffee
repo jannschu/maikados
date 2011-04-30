@@ -75,9 +75,28 @@ class UIField
     getFieldSize: () ->
         @fieldSize
     
-    addGamingPiece: (piece) ->
-        @pieces[piece.getID()] ?= new UIGamingPiece(piece, this)
-        @lastPieceID = piece.getID()
+    update: (callback) ->
+        callbackList = []
+        traverse = () ->
+            if callbackList.length is 0
+                window.setTimeout callback, 0
+            else
+                f = callbackList.shift()
+                f(traverse)
+        for pieceID, piece of @gameField.pieces
+            do (pieceID, piece) =>
+                uiPiece = (@pieces[pieceID] ?= new UIGamingPiece(piece, this))
+                row = piece.getRow()
+                col = piece.getCol()
+                # move
+                if row != uiPiece.row or col != uiPiece.col
+                    callbackList.push((f) =>
+                        @pieces[pieceID].move(f))
+                # dragon tooth TODO
+                dragonTeeth = piece.getDragonTeeth()
+                if dragonTeeth != uiPiece.dragonToothPieces.length and false
+                    callbackList.push (f) -> uiPiece.updateDragonTeeth(f)
+        traverse()
     
     setProgressBar: (val) ->
         return unless 0 <= val <= 100
@@ -174,15 +193,6 @@ class UIField
                 ).hover((() => b.addClass('pointer-cursor') unless @loading),
                         (() -> b.removeClass('pointer-cursor')))
         @_highlightFields(validFields)
-    
-    doMove: (pieceID, destField, callback) ->
-        if @swapped
-            field = 63-destField
-        else
-            field = destField
-        row = Math.floor field / 8
-        col = field - row * 8
-        @pieces[pieceID].move(row, col, callback)
     
     ###
     - private methods
@@ -354,7 +364,7 @@ class UIGamingPiece
                 withObj = elem
     
     # TODO: create _move() function which does ONLY does the animation etc. so we can use that in swap() and move()
-    move: (destRow, destCol, callback) -> # uses post-swap positions (i.e. gfx positions, not the "true" ones)
+    move: (callback) -> # uses post-swap positions (i.e. gfx positions, not the "true" ones)
         time = UI.moveTime
         
         fieldSize = @field.getFieldSize()
@@ -364,14 +374,11 @@ class UIGamingPiece
         oldRow = @row
         
         if @swapped
-            @col = 7 - destCol
-            @row = 7 - destRow
+            @col = 7 - @piece.getCol()
+            @row = 7 - @piece.getRow()
         else
-            @col = destCol
-            @row = destRow
-        
-        @piece.col = @col
-        @piece.row = @row
+            @col = @piece.getCol()
+            @row = @piece.getRow()
         
         dx = (@col - oldCol) * fieldSize
         dy = (@row - oldRow) * fieldSize
@@ -442,7 +449,7 @@ class UIGamingPiece
         # dragon tooths
         @dragonToothPieces = []
         
-        dragonTeeth = @piece.getDragonTooths()
+        dragonTeeth = @piece.getDragonTeeth()
         if dragonTeeth > 0
             rr = r * 0.82
             deltaDeg = 360 / 8

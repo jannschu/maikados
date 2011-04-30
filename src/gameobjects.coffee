@@ -44,3 +44,8 @@ class GamingPiece
     # 0 (black) or 1 (white)
     getSide: () ->
         @side
+
+class GameField
+    
+    constructor: () ->
+        @pieces = {}

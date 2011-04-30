@@ -19,20 +19,38 @@ class NetConnection
 
     constructor: () ->
         @socket = new io.Socket()
-        @callbackObjects = []
+        @callbacks =
+            msg: []
+            failure: []
+            connection: []
         
         @socket.on 'message', (msg) =>
             return unless (cmd = ProtocolMessages[msg.__cmd])
             result = new cmd(msg)
-            for obj in @callbackObjects
+            for obj in @callbacks.msg
                 obj(result)
+        
+        @socket.on 'connect', () =>
+            for obj in @callbacks.connection
+                obj()
+        
+        failureHandler = () =>
+            for obj in @callbacks.failure
+                obj()
+        @socket.on 'connect_failed', failureHandler
+        @socket.on 'disconnect', failureHandler
     
     connect: () ->
         @socket.connect()
     
-    # callback should be an instance of GameState
     onMessage: (callback) ->
-        @callbackObjects.push callback
+        @callbacks.msg.push callback
+    
+    onFailure: (callback) ->
+        @callbacks.failure.push callback
+    
+    onConnect: (callback) ->
+        @callbacks.connection.push callback
     
     send: (aMsgObj) ->
         @socket.send aMsgObj.toJSONObject()
@@ -54,11 +72,17 @@ class ClientLoginMsg extends ProtocolMessage
     constructor: ({@name}) ->
         
 
+ClientLoginMsg.isValidNickname = (nick) -> (/^[- a-z0-9_öäüß@.]{1,15}$/i).test nick
+
 ProtocolMessages[1] =
 class ServerResponseCode extends ProtocolMessages
     
     constructor: ({@code}) ->
         
+
+ServerResponseCode.codes =
+    OK: 0,
+    Illegal: 1 
 
 for cmdNr, msg of ProtocolMessages
     msg.prototype.__cmd = parseInt(cmdNr)

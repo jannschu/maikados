@@ -135,6 +135,10 @@ footer a {
     margin-right: 10px;
 }
 
-.pointer-cursor:hover {
-    cursor: pointer;
+.pointer-cursor {
+    cursor: pointer !important;
+}
+
+.wait-cursor {
+    cursor: wait !important;
 }

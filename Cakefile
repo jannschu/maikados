@@ -24,6 +24,7 @@ appFiles = [ # in order of concatenation
     'ui-characters',
     'ui',
     'net',
+    'ai',
     'game'
 ]
 

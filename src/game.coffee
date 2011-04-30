@@ -17,30 +17,46 @@
 
 class MaikadosGame extends GameState
     
-    constructor: (@ui) ->
-        super 'waitForStart'
+    constructor: (@ui, @field) ->
+        super 'waitForNickResponse'
         
         @ui.getNickName (nick, ai, handling) =>
-            handling.getNew('Dieser Nick ist leider schon weg')
-            # TODO: actually do a check
-            # @sendEvent('nick', nick)
-            # handling.ok()
-            # TODO: actually do a check
-        
-        @connection = new NetConnection
-        @connection.onMessage (msg) =>
-            @sendEvent 'message', msg
-        @connection.connect()
-        @connection.send new ClientLoginMsg(name: "Ralf")
+            if ClientLoginMsg.isValidNickname nick
+                @nickHandling = handling
+                @setupConnection(if ai then new AIConnectionObject() else new NetConnection())
+                @connection.send new ClientLoginMsg(name: nick)
+                @ui.setLoading on
+            else
+                handling.getNew 'Ungültiger Nickname'
         
         @setupDebug()
+    
+    setupConnection: (@connection) ->
+        @connection.onMessage (msg) =>
+            @sendEvent 'message', msg
+        
+        @connection.onFailure () =>
+            @ui.postNotification 'Verbindungsfehler', 'warn'
+        
+        @connection.connect()
     
     ###
     - States
     ###
-    waitForStart: (type, content) ->
-        if type is 'message' # got message over the socket
-            console.log content
+    waitForNickResponse: (type, msg) ->
+        if type is 'message' and msg instanceof ServerResponseCode
+            @ui.setLoading off
+            {code} = msg
+            if code is ServerResponseCode.codes.OK
+                @nickHandling.ok()
+                delete @nickHandling
+                return 'waitForGame'
+            else
+                @nickHandling.getNew 'Dieser Nick ist vergeben'
+        'waitForNickResponse'
+    
+    waitForGame: (type, msg) ->
+        'waitForGame'
     
     ###
     - Helper
@@ -87,5 +103,6 @@ class MaikadosGame extends GameState
             @ui.getMoveDestination pieceId, fields, (selectedField) =>
                 @ui.doMove pieceId, selectedField
 
-$(document).ready ->
-    new MaikadosGame(new UIField('game'))
+$( ->
+    field = new GameField()
+    new MaikadosGame(new UIField('game', field), field))

@@ -20,19 +20,20 @@ UI = # UI constants
             '#FF8000', '#F00', '#1FA53A', '#FC599F',
             '#F6AB00', '#68CCFF', '#0048AB', '#5D1E9B']
     
-    swapTime: 2000
-    moveTime: 1500
-
-class UIField
-    # TODO: full swap support (to be considered at drawing etc.)
-    
-    fieldRows = [
+    fieldRows: [
         [7,6,5,4,3,2,1,0],
         [2,7,4,1,6,3,0,5],
         [1,4,7,2,5,0,3,6],
         [4,5,6,7,0,1,2,3]
     ]
-    fieldRows = fieldRows.concat [row.reverse()] for row in $.extend(true, [], fieldRows).reverse()
+    
+    swapTime: 2000
+    moveTime: 1500
+
+UI.fieldRows = UI.fieldRows.concat [row.reverse()] for row in $.extend(true, [], UI.fieldRows).reverse()
+
+class UIField
+    # TODO: full swap support (to be considered at drawing etc.)
     
     signs =
         info: ['M16,4.938c-7.732,0-14,4.701-14,10.5c0,1.981,0.741,3.833,2.016,
@@ -47,7 +48,7 @@ class UIField
             v-2.151h2.241V24.58zM16.428,20.844h-2.023l-0.201-9.204h2.407L16.428,20.844z',
             {fill: '#BA4143', stroke: 'none'}]
     
-    constructor: (element) ->
+    constructor: (element, @gameField) ->
         @progressBar = new Raphael(element, 600, 10)
         @paper = new Raphael(element, 600, 600)
         
@@ -61,12 +62,15 @@ class UIField
         $.jnotify.setup(delay: 8000)
         
         @pieces = {}
+        
         @fieldSize = @paper.width / 8 # should be a square
         @swapped = false
         @backgroundPieces = ([] for col in [0..7])
         
         @_drawBackground()
         @progressBarBalls = @_drawProgressBar()
+        
+        @loading = off
     
     getFieldSize: () ->
         @fieldSize
@@ -89,16 +93,26 @@ class UIField
         @_swapBackground(callback)
         @_swapPieces()
     
+    setLoading: (value) ->
+        if value != @loading
+            @loading = value
+            if value
+                $("*").addClass 'wait-cursor'
+            else
+                $("*").removeClass 'wait-cursor'
+    
     getNickName: (testCallback) ->
         $('#startButton').click () =>
             getNickBox = $.fancybox(
                 title: 'Nicknamen wählen…',
                 href: '#getPlayerName',
+                modal: on,
                 transitionIn: 'none',
                 transitionOut: 'none',
                 'onStart': (() ->
                     ok = $.fancybox.close
                     getNew = (errorMsg) ->
+                        $('#chooseNickname').attr('disabled', '')
                         error = $('#nicknameErrorMsg')
                         $('span.msg', error).text(errorMsg)
                         if error.is(':hidden')
@@ -106,6 +120,7 @@ class UIField
                         else
                             error.effect('highlight', {}, 2000)
                     event = () ->
+                        $('#chooseNickname').attr('disabled', 'disabled')
                         nick = $('#nickname').val()
                         ai = $('#getPlayerName input[name=ai]').val() is 'yes'
                         testCallback(nick, ai, (ok: ok, getNew: getNew))
@@ -129,7 +144,7 @@ class UIField
                 
                 el = $("#piece-#{piece}").add(@backgroundPieces[row][col].node)
                 elements.push(el)
-                el.hover((() -> b.addClass('pointer-cursor')),
+                el.hover((() => b.addClass('pointer-cursor') unless @loading),
                          (() -> b.removeClass('pointer-cursor')))
                 
                 el.click () =>
@@ -156,7 +171,7 @@ class UIField
                     b.removeClass('pointer-cursor')
                     @_highlightFields([0..63])
                     window.setTimeout (() -> callback(field) if callback), 0
-                ).hover((() -> b.addClass('pointer-cursor')),
+                ).hover((() => b.addClass('pointer-cursor') unless @loading),
                         (() -> b.removeClass('pointer-cursor')))
         @_highlightFields(validFields)
     
@@ -178,10 +193,10 @@ class UIField
             fields = []
             row = Math.floor(nr / 8)
             col = nr - row * 8
-            color = fieldRows[row][col]
+            color = UI.fieldRows[row][col]
             for x in [0..7]
                 for y in [0..7]
-                    fields.push y * 8 + x if fieldRows[y][x] is color
+                    fields.push y * 8 + x if UI.fieldRows[y][x] is color
             over = () ->
                 ui._highlightFields fields
             out = () ->
@@ -262,7 +277,7 @@ class UIField
         balls
     
     _drawBackground: ->
-        for rowData, rowNr in fieldRows
+        for rowData, rowNr in UI.fieldRows
             for colorIndex, col in rowData
                 rect = @paper.rect(@fieldSize * col, @fieldSize * rowNr, @fieldSize, @fieldSize, 5)
                 rect.attr fill: UI.colorMap[colorIndex]

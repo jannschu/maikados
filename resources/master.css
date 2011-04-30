@@ -96,11 +96,17 @@ footer a {
     text-align: center;
 }
 
-#getPlayerName label:after { content: ":"; }
+#getPlayerName label[for=nickname]:after { content: ":"; }
+#getPlayerName label[for=ai]:after { content: ":"; }
+#getPlayerName label[for=ai] {
+    display: block;
+    margin: 1em auto 0.5em;
+    font-size: 1.2em;
+}
 #getPlayerName button {
     display: block;
     margin: auto;
-    margin-top: 1em;
+    margin-top: 1.5em;
 }
 
 #nicknameErrorMsg {

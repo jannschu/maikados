@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <meta charset="UTF-8">
         <!--
           - This file is part of Maikados.
           -
@@ -19,7 +20,6 @@
           -->
         <title>Maikados</title>
         <!--[if IE]><meta http-equiv="X-UA-Compatible" content="chrome=1"><![endif]-->
-        <meta charset="UTF-8">
         <link rel="stylesheet" href="resources/master.css" type="text/css" media="screen">
         <link rel="stylesheet" href="lib/fancybox/jquery.fancybox-1.3.4.css" type="text/css" media="screen">
         <link rel="stylesheet" href="lib/jnotify/jquery.jnotify.css" type="text/css" media="screen">
@@ -60,6 +60,9 @@
                 <p id="nicknameErrorMsg"><span class="msg"></span></p>
                 <label for="nickname">Und bitte</label>
                 <input type="text" value="" id="nickname">
+                <label for="ai">Der gewünschte Gegner</label>
+                <label><input type="radio" name="ai" value="yes" checked> Computer</label>
+                <label><input type="radio" name="ai" value="no"> Mensch</label>
                 <button id="chooseNickname">Abschicken</button>
             </div>
         </div>

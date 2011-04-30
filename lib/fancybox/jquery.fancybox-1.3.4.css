@@ -76,6 +76,7 @@
 	width: 0;
 	height: 0;
 	padding: 0;
+	padding-top: 20px;
 	outline: none;
 	position: relative;
 	overflow: hidden;
@@ -289,7 +290,7 @@
 .fancybox-title-float {
 	position: absolute;
 	left: 0;
-	top: -20px;
+	top: 25px;
 	height: 32px;
 }
 

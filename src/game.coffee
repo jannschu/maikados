@@ -20,7 +20,7 @@ class MaikadosGame extends GameState
     constructor: (@ui) ->
         super 'waitForStart'
         
-        @ui.getNickName (nick, handling) =>
+        @ui.getNickName (nick, ai, handling) =>
             handling.getNew('Dieser Nick ist leider schon weg')
             # TODO: actually do a check
             # @sendEvent('nick', nick)

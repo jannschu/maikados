@@ -107,7 +107,8 @@ class UIField
                             error.effect('highlight', {}, 2000)
                     event = () ->
                         nick = $('#nickname').val()
-                        testCallback(nick, (ok: ok, getNew: getNew))
+                        ai = $('#getPlayerName input[name=ai]').val() is 'yes'
+                        testCallback(nick, ai, (ok: ok, getNew: getNew))
                     $('#chooseNickname').click(event))
             )
     

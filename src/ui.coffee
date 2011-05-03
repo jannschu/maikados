@@ -131,15 +131,15 @@ class UIField
                 'onStart': (() ->
                     ok = $.fancybox.close
                     getNew = (errorMsg) ->
-                        $('#chooseNickname').attr('disabled', '')
+                        $('#chooseNickname').attr('disabled', false)
                         error = $('#nicknameErrorMsg')
                         $('span.msg', error).text(errorMsg)
                         if error.is(':hidden')
                             error.slideDown('slow')
                         else
-                            error.effect('highlight', {}, 2000)
+                            error.effect('highlight', (color: '#FCD9DA'), 2000)
                     event = () ->
-                        $('#chooseNickname').attr('disabled', 'disabled')
+                        $('#chooseNickname').attr('disabled', true)
                         nick = $('#nickname').val()
                         ai = $('#getPlayerName input[name=ai]').val() is 'yes'
                         testCallback(nick, ai, (ok: ok, getNew: getNew))
@@ -148,7 +148,7 @@ class UIField
     
     postNotification: (msg, sign = 'info') ->
         sign = if signs[sign] then sign else 'info'
-        elem = $("#svg-#{sign}").clone().attr(id: null)
+        elem = $("#svg-#{sign}").clone().removeProp('id')
         $.jnotify(msg, create: (e) -> $('.jnotify-message', e).prepend(elem))
     
     getPieceSelection: (validPieces, callback) ->

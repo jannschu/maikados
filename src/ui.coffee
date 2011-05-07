@@ -78,7 +78,7 @@ class UIField
         callbackList = []
         traverse = () ->
             if callbackList.length is 0
-                window.setTimeout callback, 0
+                window.setTimeout 'callback()', 0
             else
                 f = callbackList.shift()
                 f(traverse)
@@ -457,13 +457,14 @@ class UIGamingPiece
                 withObj = elem
     
     updateDragonTeeth: (callback) ->
+        # TODO: from 0 to 1 animation
         current = @dragonToothPieces.length
         goal = @piece.getDragonTeeth()
         
         diff = goal - current
         
         if diff is 0 or !(0 <= goal <= 4)
-            window.setTimeout callback, 0
+            window.setTimeout 'callback()', 0
         else if diff < 0
             for n in [diff...0]
                 pieces = @dragonToothPieces.pop()
@@ -483,14 +484,24 @@ class UIGamingPiece
                 for j in [1..(Math.abs diff)]
                     @_addDragonTooth(current, goal)
                     attrs2 = {rotation: "#{(360 / 32) * j} #{@cx} #{@cy}", easing: '<>'}
+                    defined = false
                     for el in @dragonToothPieces[current + j - 1]
-                        el.animate(attrs2, time2)
-                (window.setTimeout callback, 0) if callback
+                        if defined
+                            el.animate(attrs2, time2)
+                        else
+                            defined = true
+                            el.animate(attrs2, time2, callback)
+            if current is 0
+                current = goal
+                diff = 0
+                for n in [1..goal]
+                    @_addDragonTooth(n, goal)
             
             attrs = {rotation: "#{360 - (360 / 64) * diff} #{@cx} #{@cy}", easing: '<>'}
             for n in [0...current]
                 for el, i in @dragonToothPieces[n]
-                    attrs.callback = addCallback if n is current - 1 and i is 7
+                    if n is current - 1 && i is 7
+                        attrs.callback = if diff is 0 then callback else addCallback
                     el.animate(("80%": attrs), time)
     
     animateBlocked: (callback) ->

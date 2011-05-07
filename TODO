@@ -19,7 +19,6 @@ UI
 
 * Animation
   + von gekickten Steinen (Raphael: animation -> cubic-bezier)
-  + vom Hinzufügen von Drachenzähnen (von oben "drauffallen" (schneller werden, etwas hochspringen vielleicht))
   + von blockierten Steinen (könnten zittern & Benachrichtigung)
   + eines Siegs/Niederlage
     Vorschlag: SVG-Symbol einer Strichfigur im Jubel/hängendem Kopf auf

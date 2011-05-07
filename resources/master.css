@@ -64,6 +64,33 @@ a:hover { color: #FFCF8B; }
   width: 45%;
   vertical-align: top;
 }
+#gameInformation {
+    text-align: center;
+    color: #CB0B18;
+    font-style: italic;
+    font-size: 1.5em;
+    display: none;
+}
+
+#player0Name, #player1Name {
+    display: block;
+    font-size: 1.7em;
+    color: #FEEEF0;
+}
+
+#player0Name { margin-top: 40px; }
+#player1Name { margin-top: 20px; }
+
+#player0Points, #player1Points {
+    color: #939393;
+    font-size: 0.5em;
+    display: block;
+    margin-top: -0.2em;
+    margin-bottom: 20px;
+}
+
+#player0Points:before, #player1Points:before { content: "( "; }
+#player0Points:after, #player1Points:after { content: " ) "; }
 
 footer {
   font-size: 0.6em;

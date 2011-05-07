@@ -25,10 +25,6 @@ UI
     http://raphaeljs.com/reference.html#registerFont
   + eines Neustarts / neue Runde (Steine "fliegen" auf ihre Position)
 
-* Darstellung von Spielernamen & was zur Zeit geschieht (wer ist dran, Verbindungsaufbau etc => Status).
-  Sollte mit jQuery in HTML schnell erledigt sein.
-
-
 Socket/Spielablauf
 ------------------
 

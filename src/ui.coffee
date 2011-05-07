@@ -195,6 +195,35 @@ class UIField
                         (() -> b.removeClass('pointer-cursor')))
         @_highlightFields(validFields)
     
+    setGameInformation: (info) ->
+        updatePoints = () =>
+            points = [0, 1, 3, 7, 15]
+            points0 = 0
+            points1 = 0
+            for id, piece of @pieces
+                piece = piece.getPiece()
+                if piece.getSide() is 0
+                    points0 += points[piece.getDragonTeeth()]
+                else
+                    points1 += points[piece.getDragonTeeth()]
+            n = Math.ceil((Math.log Math.max(points0, points1) + 1) / (Math.log 2))
+            max = Math.pow(2, n) - 1
+            $('#player0Points').text("#{points0} / #{max}")
+            $('#player1Points').text("#{points1} / #{max}")
+        
+        if info is 'update'
+            updatePoints()
+        else
+            {player0Name, player1Name} = info
+            
+            unless player0Name or player1Name
+                $('#gameInformation').hide()
+            else
+                (e = $('#gameInformation')).show()
+                updatePoints()
+                $('#player0Name').text(player0Name) if player0Name
+                $('#player1Name').text(player1Name) if player1Name
+    
     ###
     - private methods
     ###

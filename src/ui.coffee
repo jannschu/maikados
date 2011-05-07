@@ -28,7 +28,6 @@ UI = # UI constants
     ]
     
     swapTime: 2000
-    moveTime: 1500
 
 UI.fieldRows = UI.fieldRows.concat [row.reverse()] for row in $.extend(true, [], UI.fieldRows).reverse()
 
@@ -379,8 +378,6 @@ class UIGamingPiece
     
     # TODO: create _move() function which does ONLY does the animation etc. so we can use that in swap() and move()
     move: (callback) -> # uses post-swap positions (i.e. gfx positions, not the "true" ones)
-        time = UI.moveTime
-        
         fieldSize = @field.getFieldSize()
         paper = @field.paper
         
@@ -396,6 +393,9 @@ class UIGamingPiece
         
         dx = (@col - oldCol) * fieldSize
         dy = (@row - oldRow) * fieldSize
+        
+        time = 1000 * Math.sqrt(dx * dx + dy * dy) / 180 # distance / speed
+        
         attrs = (translation: "#{dx} #{dy}") 
         
         animElems = [

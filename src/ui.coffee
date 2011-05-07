@@ -78,7 +78,7 @@ class UIField
         callbackList = []
         traverse = () ->
             if callbackList.length is 0
-                window.setTimeout (() -> callback), 0
+                window.setTimeout (() -> callback()), 0
             else
                 f = callbackList.shift()
                 f(traverse)
@@ -464,7 +464,7 @@ class UIGamingPiece
         diff = goal - current
         
         if diff is 0 or !(0 <= goal <= 4)
-            window.setTimeout (() -> callback), 0
+            window.setTimeout (() -> callback()), 0
         else if diff < 0
             for n in [diff...0]
                 pieces = @dragonToothPieces.pop()

@@ -19,7 +19,7 @@ class GamingPiece
     
     constructor: (@colorID, @row, @col, @side) ->
         @id = "#{@side}-#{@colorID}"
-        @dragonTooths = 0
+        @dragonTeeth = 0
     
     getColorID: () ->
         @colorID
@@ -28,10 +28,10 @@ class GamingPiece
         @id
     
     getDragonTeeth: () ->
-        @dragonTooths
+        @dragonTeeth
     
     setDragonTeeth: (value) ->
-        @dragonTooths = value if 0 <= value <= 4
+        @dragonTeeth = value if 0 <= value <= 4
     
     # 0 to 7
     getRow: () -> @row

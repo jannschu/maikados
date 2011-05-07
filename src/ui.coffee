@@ -427,9 +427,8 @@ class UIGamingPiece
                 withObj = elem
     
     updateDragonTeeth: (callback) ->
-        # TODO: animation for removing pieces
         current = @dragonToothPieces.length
-        goal = current - 1#@piece.getDragonTeeth()
+        goal = @piece.getDragonTeeth()
         
         diff = goal - current
         

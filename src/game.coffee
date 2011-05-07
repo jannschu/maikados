@@ -94,19 +94,22 @@ class MaikadosGame extends GameState
         
         @ui.postNotification "Wähle einen Stein aus!"
         @ui.getPieceSelection ("1-#{p}" for p in [0..7]), (pieceId) =>
-            fields = []
-            {row, col} = @ui.pieces[pieceId]
-            a = b = i = row * 8 + col
-            mod = (a, m) -> a - Math.floor(a/m) * m
-            (fields.push a) while ((a -= 9) % 8) >= 0 and (a % 8) < (i % 8) and  a > 7
-            (fields.push b) while ((b -= 7) % 8) > 0 and b > 7
-            (fields.push i) while (i -= 8) > 7
-                
-            @ui.getMoveDestination pieceId, fields, (selectedField) =>
-                row = Math.floor(selectedField / 8)
-                col = selectedField - row * 8
-                @field.pieces[pieceId].setCol(col).setRow(row)
-                @ui.update()
+            pieceUI = @ui.getUIPiece(pieceId)
+            (p = pieceUI.getPiece()).setDragonTeeth p.getDragonTeeth() + 1
+            @ui.update()
+            # fields = []
+            # {row, col} = @ui.pieces[pieceId]
+            # a = b = i = row * 8 + col
+            # mod = (a, m) -> a - Math.floor(a/m) * m
+            # (fields.push a) while ((a -= 9) % 8) >= 0 and (a % 8) < (i % 8) and  a > 7
+            # (fields.push b) while ((b -= 7) % 8) > 0 and b > 7
+            # (fields.push i) while (i -= 8) > 7
+            # 
+            # @ui.getMoveDestination pieceId, fields, (selectedField) =>
+            #     row = Math.floor(selectedField / 8)
+            #     col = selectedField - row * 8
+            #     @field.pieces[pieceId].setCol(col).setRow(row)
+            #     @ui.update()
 
 $( ->
     field = new GameField()

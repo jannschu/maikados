@@ -402,9 +402,10 @@ class UIGamingPiece
                     elem: elem
                     attr: attrs)
         
-        
+        toFront = (group) ->
+            
+        (group = $("#piece-#{@piece.getID()}")).parent("svg").append(group)
         for {elem, attr} in animElems
-            elem.toFront()
             if withObj
                 elem.animateWith withObj, attr, time
             else

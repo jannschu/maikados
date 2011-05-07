@@ -78,7 +78,7 @@ class UIField
         callbackList = []
         traverse = () ->
             if callbackList.length is 0
-                window.setTimeout (() -> callback()), 0
+                window.setTimeout (() -> callback() if callback), 0
             else
                 f = callbackList.shift()
                 f(traverse)
@@ -501,7 +501,6 @@ class UIGamingPiece
             for n in [0...current]
                 for el, i in @dragonToothPieces[n]
                     if n is current - 1 && i is 7
-                        console.log "callback"
                         attrs.callback = if diff is 0 then callback else addCallback
                     el.animate(("80%": attrs), time)
     

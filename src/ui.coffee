@@ -312,7 +312,7 @@ class UIField
         balls = []
         for i in [1..n]
             newHue = hue + step
-            balls.push @progressBar.circle((2 * r + a) * (i - 1) + r, r, r - 1).
+            balls.push @progressBar.circle((2 * r + a) * (i - 1) + r, r, 0).
                 attr(fill: "0-hsb(#{hue}°, .5, .5)-hsb(#{newHue}°, .5, .5)", 'fill-opacity': '50%', stroke: 'none')
             hue = newHue
         balls

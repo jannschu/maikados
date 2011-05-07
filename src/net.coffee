@@ -64,26 +64,35 @@ class ProtocolMessage
                 obj[name] = value
         obj
 
+
 ProtocolMessages = {}
 
-ProtocolMessages[0] =
-class ClientLoginMsg extends ProtocolMessage
-    
+ProtocolMessages[0] = class ClientLoginMsg extends ProtocolMessage
     constructor: ({@name}) ->
-        
 
 ClientLoginMsg.isValidNickname = (nick) -> (/^[- a-z0-9_öäüß@.]{1,15}$/i).test nick
 
-ProtocolMessages[1] =
-class ServerResponseCode extends ProtocolMessages
-    
+ProtocolMessages[1] = class ServerResponseCodeMsg extends ProtocolMessages
     constructor: ({@code}) ->
-        
 
-ServerResponseCode.codes =
+ServerResponseCodeMsg.codes =
     OK: 0,
-    Illegal: 1 
+    Illegal: 1
+
+ProtocolMessages[2] = class ServerGameStartMsg extends ProtocolMessages
+    constructor: ({@opponent, @side, @pieces}) ->
+
+ProtocolMessages[3] = class ServerGameControlMsg extends ProtocolMessages
+    constructor: ({@code}) ->
+
+ServerGameControlMsg.codes =
+    Player0Thinks: 0,
+    Player1Thinks: 1,
+    Player0Wins: 2,
+    Player1Wins: 3,
+    NextModeQuestion: 4
+
 
 for cmdNr, msg of ProtocolMessages
-    msg.prototype.__cmd = parseInt(cmdNr)
+    msg::.__cmd = parseInt(cmdNr)
      

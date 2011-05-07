@@ -47,20 +47,49 @@ class AIConnectionObject
 class AIGameLogic extends GameState
     
     constructor: (@connection) ->
+        ###
+        - General information:
+        -   ai is player 0, human is player 1
+        ###
         @aiPlayer = new AIPlayer()
+        
+        @field = new GameField()
+        
         super 'waitForLoginRequest'
     
     waitForLoginRequest: (type, msg) ->
         if type is 'message' and msg instanceof ClientLoginMsg
             {name} = msg
             if ClientLoginMsg.isValidNickname(name) and @aiPlayer.name isnt name
-                @connection.sendToClient new ServerResponseCode(code: ServerResponseCode.codes.OK)
-                return 'waitForLoginRequest' # TODO
+                @connection.sendToClient new ServerResponseCodeMsg(code: ServerResponseCodeMsg.codes.OK)
+                @connection.sendToClient new ServerGameStartMsg(opponent: @aiPlayer.getName(), side: 1, pieces: @getStartPieces())
+                @connection.sendToClient new ServerGameControlMsg(code: ServerGameControlMsg.codes.Player1Thinks)
+                return 'waitForGameAction'
             else
-                @connection.sendToClient new ServerResponseCode(code: ServerResponseCode.codes.Illegal)
+                @connection.sendToClient new ServerResponseCodeMsg(code: ServerResponseCodeMsg.codes.Illegal)
         'waitForLoginRequest'
-
+    
+    waitForGameAction: (type, msg) ->
+        'waitForGameAction'
+    
+    getStartPieces: () ->
+        pieces = []
+        for x in [0..7]
+                               # colorID, row, col, side
+            a = new GamingPiece(7-x, 0, x, 0)
+            b = new GamingPiece(x, 7, x, 1)
+            
+            @field.addGamingPiece(a)
+            @field.addGamingPiece(b)
+            
+            pieces.push (color: 7 - x, row: 0, col: x, side: 0)
+            pieces.push (color:     x, row: 7, col: x, side: 1)
+        
+        return pieces
+ 
 class AIPlayer
     
     constructor: () ->
         @name = 'Larry II.'
+    
+    getName: () -> @name

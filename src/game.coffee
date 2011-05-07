@@ -25,6 +25,7 @@ class MaikadosGame extends GameState
                 @nickHandling = handling
                 @setupConnection(if ai then new AIConnectionObject() else new NetConnection())
                 @connection.send new ClientLoginMsg(name: nick)
+                @nick = nick
                 @ui.setLoading on
             else
                 handling.getNew 'Ungültiger Nickname'
@@ -44,19 +45,24 @@ class MaikadosGame extends GameState
     - States
     ###
     waitForNickResponse: (type, msg) ->
-        if type is 'message' and msg instanceof ServerResponseCode
+        if type is 'message' and msg instanceof ServerResponseCodeMsg
             @ui.setLoading off
             {code} = msg
-            if code is ServerResponseCode.codes.OK
+            if code is ServerResponseCodeMsg.codes.OK
                 @nickHandling.ok()
                 delete @nickHandling
-                return 'waitForGame'
+                return 'waitForGameStart'
             else
                 @nickHandling.getNew 'Dieser Nick ist vergeben'
         'waitForNickResponse'
     
-    waitForGame: (type, msg) ->
-        'waitForGame'
+    waitForGameStart: (type, msg) ->
+        if type is 'message' and msg instanceof ServerGameStartMsg
+            {opponent, side, pieces} = msg
+            infos = {}
+            infos["player#{1 - side}Name"] = opponent
+            infos["player#{side}Name"] = @nick
+            @ui.setGameInformation(infos)
     
     ###
     - Helper
@@ -89,15 +95,17 @@ class MaikadosGame extends GameState
             pos = 100 if pos < 0
             @ui.setProgressBar(pos)
             pos -= 1
-            window.setTimeout countDown, 500
+            window.setTimeout (() -> countDown()), 500
         countDown()
         
         @ui.postNotification "Wähle einen Stein aus!"
         @ui.getPieceSelection ("1-#{p}" for p in [0..7]), (pieceId) =>
             pieceUI = @ui.getUIPiece(pieceId)
-            pieceUI.animateBlocked(() -> console.log "callback called")
-            # (p = pieceUI.getPiece()).setDragonTeeth p.getDragonTeeth() + 1
-            # @ui.update()
+            (p = pieceUI.getPiece()).setDragonTeeth p.getDragonTeeth() + 1
+            alert("Drachenstein Animation")
+            @ui.update(() ->
+                alert("Geblockter Stein Animation")
+                pieceUI.animateBlocked())
             # fields = []
             # {row, col} = @ui.pieces[pieceId]
             # a = b = i = row * 8 + col

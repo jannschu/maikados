@@ -196,6 +196,7 @@ class UIField
         @_highlightFields(validFields)
     
     setGameInformation: (info) ->
+        gameType = info.gameType ? 4
         updatePoints = () =>
             points = [0, 1, 3, 7, 15]
             points0 = 0
@@ -207,7 +208,7 @@ class UIField
                 else
                     points1 += points[piece.getDragonTeeth()]
             n = Math.ceil((Math.log Math.max(points0, points1) + 1) / (Math.log 2))
-            max = Math.pow(2, n) - 1
+            max = Math.pow(2, Math.min(gameType, n)) - 1
             $('#player0Points').text("#{points0} / #{max}")
             $('#player1Points').text("#{points1} / #{max}")
         

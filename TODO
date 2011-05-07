@@ -15,8 +15,6 @@ UI
   + beim Einfügen/Updaten der Spielsteine umrechnen
   + beim Einlesen von Spielzügen umrechnen
 
-* "PopUp" für: KI j/n
-
 * Animation
   + von gekickten Steinen (Raphael: animation -> cubic-bezier)
   + eines Siegs/Niederlage

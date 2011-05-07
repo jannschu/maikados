@@ -98,6 +98,8 @@ class UIField
                     callbackList.push (f) -> uiPiece.updateDragonTeeth(f)
         traverse()
     
+    getUIPiece: (id) -> @pieces[id]
+    
     setProgressBar: (val) ->
         return unless 0 <= val <= 100
         balls = Math.round((val / 100) * @progressBarBalls.length)
@@ -411,6 +413,14 @@ class UIGamingPiece
             else
                 elem.animate attr, time, callback # callback here because it will only be executed once, hopefully
                 withObj = elem
+    
+    updateDragonTeeth: (callback) ->
+        # TODO: implement
+        window.setTimeout callback, 0
+    
+    animateBlocked: (callback) ->
+        # TODO: implement
+        window.setTimeout callback, 0
     
     ###
     - private methods

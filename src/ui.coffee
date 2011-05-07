@@ -130,7 +130,9 @@ class UIField
                 transitionIn: 'none',
                 transitionOut: 'none',
                 'onStart': (() ->
-                    ok = $.fancybox.close
+                    ok = () ->
+                        $('#chooseNickname').attr('disabled', false)
+                        $.fancybox.close()
                     getNew = (errorMsg) ->
                         $('#chooseNickname').attr('disabled', false)
                         error = $('#nicknameErrorMsg')
@@ -457,7 +459,6 @@ class UIGamingPiece
                 withObj = elem
     
     updateDragonTeeth: (callback) ->
-        # TODO: from 0 to 1 animation
         current = @dragonToothPieces.length
         goal = @piece.getDragonTeeth()
         

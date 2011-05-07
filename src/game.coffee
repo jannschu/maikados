@@ -95,8 +95,9 @@ class MaikadosGame extends GameState
         @ui.postNotification "Wähle einen Stein aus!"
         @ui.getPieceSelection ("1-#{p}" for p in [0..7]), (pieceId) =>
             pieceUI = @ui.getUIPiece(pieceId)
-            (p = pieceUI.getPiece()).setDragonTeeth p.getDragonTeeth() + 1
-            @ui.update()
+            pieceUI.animateBlocked(() -> console.log "callback called")
+            # (p = pieceUI.getPiece()).setDragonTeeth p.getDragonTeeth() + 1
+            # @ui.update()
             # fields = []
             # {row, col} = @ui.pieces[pieceId]
             # a = b = i = row * 8 + col

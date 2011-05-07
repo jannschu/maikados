@@ -464,8 +464,33 @@ class UIGamingPiece
                     el.animate(("80%": attrs), time)
     
     animateBlocked: (callback) ->
-        # TODO: implement
-        window.setTimeout callback, 0
+        duration = 2000
+        offset = 1
+        attrs = {}
+        for i in [0..24]
+            x = i * 4
+            attrs[x + 2] = (translation: "#{- 2 * offset}")
+            attrs[x + 4] = (translation: "#{2 * offset}")
+        attrs[2].translation = "#{-offset}"
+        attrs[100].translation = "#{offset}"
+        
+        jitterElem = (elem, setCallback = false) ->
+            attrs[100].callback = callback if setCallback
+            elem.animate(attrs, duration)
+        
+        elems = []
+        
+        for elem in @set
+            elems.push elem
+        
+        for pieces, a in @dragonToothPieces
+            for elem, b in pieces
+                elems.push elem
+        
+        l = elems.length - 1
+        for elem, i in elems
+            jitterElem elem, (i == l)
+        
     
     ###
     - private methods

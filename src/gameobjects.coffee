@@ -51,5 +51,6 @@ class GameField
     constructor: () ->
         @pieces = {}
     
-    addGamingPiece: (piece) ->
-        @pieces[piece.getID()] = piece
+    addGamingPiece: (piece) -> @pieces[piece.getID()] = piece
+    
+    getGamingPiece: (id) -> @piece[id]

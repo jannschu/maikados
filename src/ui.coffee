@@ -94,7 +94,7 @@ class UIField
                         @pieces[pieceID].move(f))
                 # dragon tooth TODO
                 dragonTeeth = piece.getDragonTeeth()
-                if dragonTeeth != uiPiece.dragonToothPieces.length and false
+                if dragonTeeth != uiPiece.dragonToothPieces.length
                     callbackList.push (f) -> uiPiece.updateDragonTeeth(f)
         traverse()
     
@@ -301,11 +301,23 @@ class UIField
 
 class UIGamingPiece
     
+    bg = ['#1B1B1B', '#EEE']
+    
     constructor: (@piece, @field) ->
         @swapped = false
         @row = @piece.getRow()
         @col = @piece.getCol()
+        
+        fieldSize = @field.getFieldSize()
+        
+        @r = fieldSize * 0.5 * 0.8
+        
+        @cx = fieldSize * (@col + 0.5)
+        @cy = fieldSize * (@row + 0.5)
+        
         @set = @_drawPiece()
+    
+    getPiece: () -> @piece
     
     swap: () ->
         time = UI.swapTime
@@ -415,8 +427,42 @@ class UIGamingPiece
                 withObj = elem
     
     updateDragonTeeth: (callback) ->
-        # TODO: implement
-        window.setTimeout callback, 0
+        # TODO: animation for removing pieces
+        current = @dragonToothPieces.length
+        goal = current - 1#@piece.getDragonTeeth()
+        
+        diff = goal - current
+        
+        if diff is 0 or !(0 <= goal <= 4)
+            window.setTimeout callback, 0
+        else if diff < 0
+            for n in [diff...0]
+                pieces = @dragonToothPieces.pop()
+                for el in pieces
+                    el.remove()
+            
+            time = 1500
+            for elems in @dragonToothPieces
+                for elem in elems
+                    elem.animate({rotation: "#{(-360 + 360 / 64) * (-diff)} #{@cx} #{@cy}"}, time, '<>', callback)
+        else
+            time = 2000
+            
+            addCallback = () =>
+                time2 = time * 0.2
+                
+                for j in [1..(Math.abs diff)]
+                    @_addDragonTooth(current, goal)
+                    attrs2 = {rotation: "#{(360 / 32) * j} #{@cx} #{@cy}", easing: '<>'}
+                    for el in @dragonToothPieces[current + j - 1]
+                        el.animate(attrs2, time2)
+                (window.setTimeout callback, 0) if callback
+            
+            attrs = {rotation: "#{360 - (360 / 64) * diff} #{@cx} #{@cy}", easing: '<>'}
+            for n in [0...current]
+                for el, i in @dragonToothPieces[n]
+                    attrs.callback = addCallback if n is current - 1 and i is 7
+                    el.animate(("80%": attrs), time)
     
     animateBlocked: (callback) ->
         # TODO: implement
@@ -437,22 +483,18 @@ class UIGamingPiece
         paper.canvas.appendChild(group)
         
         set = []
-        r = fieldSize * 0.5 * 0.8
         
-        cx = fieldSize * (@col + 0.5)
-        cy = fieldSize * (@row + 0.5)
-        
-        set.push paper.circle(cx + r / 7, cy + r / 7, r * 1.05).
+        set.push paper.circle(@cx + @r / 7, @cy + @r / 7, @r * 1.05).
             attr(fill: 'rblack:80%-rgba(0, 0, 0, 0)', stroke: 'none')
-        bg = ['#1B1B1B', '#EEE']
-        set.push paper.circle(cx, cy, r).
+        
+        set.push paper.circle(@cx, @cy, @r).
             attr(
                 stroke: '#7E7E7E',
                 fill: bg[@piece.getSide()],
                 'stroke-width': 1)
         
         colorID = @piece.getColorID()
-        colorChar = @_fitPathInto(UICharaters[colorID], cx, cy, r)
+        colorChar = @_fitPathInto(UICharaters[colorID], @cx, @cy, @r)
         set.push colorChar.attr(fill: UI.colorMap[colorID], stroke: 'none')
         
         $(group).append(setItem) for setItem in set
@@ -462,25 +504,30 @@ class UIGamingPiece
         
         dragonTeeth = @piece.getDragonTeeth()
         if dragonTeeth > 0
-            rr = r * 0.82
-            deltaDeg = 360 / 8
-            diffDeg = 360 / (4 * 8)
-            rad = Raphael.rad(diffDeg / 2)
-            size = Math.sin(rad) * rr * 2
-            y = cy - (size / 2 + Math.cos(rad) * rr)
-            path = 'M 4 0L0 6L4 5L8 6z'
-            initDegOffset = -(diffDeg / 2 * (dragonTeeth - 1)) 
             for n in [1..dragonTeeth]
-                dragonToothPiece = []
-                for i in [0..7]
-                    angle = initDegOffset + i * deltaDeg + (n - 1) * diffDeg
-                    el = @_fitPathInto(path, cx, y, size).
-                        rotate(angle, cx, cy).attr(fill: bg[1 - @piece.getSide()], stroke: 'none')
-                    dragonToothPiece.push el
-                    $(group).append(el)
-                @dragonToothPieces.push dragonToothPiece
+                @_addDragonTooth(n, dragonTeeth)
         
         set
+    
+    _addDragonTooth: (n, dragonTeeth) ->
+        color = bg[1 - @piece.getSide()]
+        rr = @r * 0.82
+        deltaDeg = 360 / 8
+        diffDeg = 360 / (4 * 8)
+        rad = Raphael.rad(diffDeg / 2)
+        size = Math.sin(rad) * rr * 2
+        y = @cy - (size / 2 + Math.cos(rad) * rr)
+        path = 'M 4 0L0 6L4 5L8 6z'
+        initDegOffset = -(diffDeg / 2 * (dragonTeeth - 1))
+        dragonToothPiece = []
+        group = $("#piece-#{@piece.getID()}")
+        for i in [0..7]
+            angle = initDegOffset + i * deltaDeg + (n - 1) * diffDeg
+            el = @_fitPathInto(path, @cx, y, size).
+                rotate(angle, @cx, @cy).attr(fill: color, stroke: 'none')
+            dragonToothPiece.push el
+            group.append(el)
+        @dragonToothPieces.push dragonToothPiece
     
     _fitPathInto: (path, cx0, cy0, width0, height0 = width0) ->
         

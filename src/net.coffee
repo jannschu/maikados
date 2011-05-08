@@ -96,11 +96,10 @@ ServerGameControlMsg.codes =
     WaitForOpponent: 0
     ChoosePiece: 1
     ChooseField: 2
-    AddDragonTooth: 3
-    YouLost: 4
-    YouWin: 5
-    NextModeQuestion: 6
-    NextMode: 7
+    YouLost: 3
+    YouWin: 4
+    NextModeQuestion: 5
+    NextMode: 6
 
 
 ProtocolMessages[4] = class GameActionMsg extends ProtocolMessages

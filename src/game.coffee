@@ -144,9 +144,7 @@ class MaikadosGame extends GameState
                     [piece, nr] = data
                     @animateMove(piece, nr, () => @resumeFSM())
                     return 'waitForGameControl'
-                
         @stopCountdown()
-        
         'waitForGameAction'
     
     ###
@@ -161,7 +159,8 @@ class MaikadosGame extends GameState
                 p.setRow(p.getRow() - (if side is 0 then 1 else -1))
         row = Math.floor(nr / 8)
         col = nr - row * 8
-        @field.getGamingPiece(piece).setRow(row).setCol(col)
+        (gp = @field.getGamingPiece(piece)).setRow(row).setCol(col)
+        gp.setDragonTeeth(gp.getDragonTeeth() + 1) if row is 7 or row is 0
         @ui.update(() => callback)
     
     setCountdown: (seconds, callback) ->

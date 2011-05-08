@@ -71,6 +71,7 @@ class GameField
         while (mod (b -= B), 8) > (i % 8) 
             break if @pieceOnField(b) isnt null
             fields.push b
+        
         while 63 >= (i -= I) >= 0
             rowDiff = Math.abs((Math.floor i / 8) - piece.getRow())
             if (dt = piece.getDragonTeeth()) > 0 and rowDiff is 1
@@ -113,7 +114,7 @@ class GameField
                 kickedSide = piece.getSide() if piece.getRow() is row
         
         diff = (ref, test) ->
-            if kickedSide is 0 then ref - row else row - ref
+            if kickedSide is 0 then ref - test else test - ref
         kickedPieces = []        
         for i in [0...3]
             for p in inCol

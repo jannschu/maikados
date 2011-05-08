@@ -81,20 +81,21 @@ class AIGameLogic extends GameState
         'waitForPieceChosen'
     
     waitForFieldChosen: (type, msg) ->
+        # check Win/Lost? DragonTooth?
         'waitForFieldChosen'
     
     getStartPieces: () ->
         pieces = []
         for x in [0..7]
                                # colorID, row, col, side
-            a = new GamingPiece(7-x, 0, x, 6)
+            a = new GamingPiece(7-x, 0, x, 0)
             b = new GamingPiece(x, 7, x, 1)
             
             @field.addGamingPiece(a)
             @field.addGamingPiece(b)
             
-            pieces.push (color: 7 - x, row: 0, col: x, side: 0, dragonTeeth: 0)
-            pieces.push (color:     x, row: 7, col: x, side: 1, dragonTeeth: 0)
+            pieces.push (color: a.getColorID(), row: a.getRow(), col: a.getCol(), side: a.getSide(), dragonTeeth: a.getDragonTeeth())
+            pieces.push (color: b.getColorID(), row: b.getRow(), col: b.getCol(), side: b.getSide(), dragonTeeth: b.getDragonTeeth())
         
         return pieces
  

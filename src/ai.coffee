@@ -113,7 +113,7 @@ class AIGameLogic extends GameState
                 @connection.sendToClient(new GameActionMsg(action: GameActionMsg.actions.FieldChosen, data: data))
             
             if nextPiece is false # double block situation
-                msg = if side = 0
+                msg = if side is 0
                     ServerGameControlMsg.codes.YouLost
                 else
                     @aiPlayer.youFailedNotification(@nick) if side is 1
@@ -139,8 +139,7 @@ class AIGameLogic extends GameState
         for x in [0..7]
                                # colorID, row, col, side
             a = new GamingPiece(7-x, 0, x, 0)
-            a.setRow 5 if x is 5
-            b = new GamingPiece(x, 7, x, 1)
+            b = new GamingPiece(  x, 7, x, 1)
             
             @field.addGamingPiece(a)
             @field.addGamingPiece(b)

@@ -66,12 +66,12 @@ class GameField
         a = b = i = piece.getRow() * 8 + piece.getCol()
         mod = (a, m) -> a - Math.floor(a/m) * m
         fields = []
-        
-        while (mod (a -= A), 8) < (i % 8)
+        abs = Math.abs
+        while (mod (a -= A), 8) < (i % 8) and 0 <= a < 64
             break if @pieceOnField(a) isnt null
             fields.push a
         
-        while (mod (b -= B), 8) > (i % 8) 
+        while (mod (b -= B), 8) > (i % 8) and 0 <= b < 64
             break if @pieceOnField(b) isnt null
             fields.push b
         
@@ -123,7 +123,6 @@ class GameField
         col = nr - row * 8
         kickedPieces = if @pieceOnField(nr) then @getKickedPieces(nr) else []
         if kickedPieces.length isnt 0
-            console.log "kicked"
             pieceId = undefined
             col = kickedPieces[0].getCol()
             side = kickedPieces[0].getSide()

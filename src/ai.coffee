@@ -46,6 +46,8 @@ class AIConnectionObject
 
 class AIGameLogic extends GameState
     
+    timeForMove = 60 # seconds
+    
     constructor: (@connection) ->
         ###
         - General information:
@@ -61,29 +63,38 @@ class AIGameLogic extends GameState
         if type is 'message' and msg instanceof ClientLoginMsg
             {name} = msg
             if ClientLoginMsg.isValidNickname(name) and @aiPlayer.name isnt name
-                @connection.sendToClient new ServerResponseCodeMsg(code: ServerResponseCodeMsg.codes.OK)
+                @connection.sendToClient new ResponseCodeMsg(code: ResponseCodeMsg.codes.OK)
                 @connection.sendToClient new ServerGameStartMsg(opponent: @aiPlayer.getName(), side: 1, pieces: @getStartPieces())
-                @connection.sendToClient new ServerGameControlMsg(code: ServerGameControlMsg.codes.Player1Thinks)
-                return 'waitForGameAction'
+                @connection.sendToClient new ServerGameControlMsg(code: ServerGameControlMsg.codes.ChoosePiece, data: timeForMove / 2)
+                return 'waitForPieceChosen'
             else
-                @connection.sendToClient new ServerResponseCodeMsg(code: ServerResponseCodeMsg.codes.Illegal)
+                @connection.sendToClient new ResponseCodeMsg(code: ResponseCodeMsg.codes.Illegal)
         'waitForLoginRequest'
     
-    waitForGameAction: (type, msg) ->
-        'waitForGameAction'
+    waitForPieceChosen: (type, msg) ->
+        if type is 'message' and msg instanceof GameActionMsg and msg.action is GameActionMsg.actions.PieceChosen
+            piece = "1-#{msg.data}"
+            fields = @field.getAllowedMovesFor piece
+            data = [piece, fields, timeForMove]
+            @connection.sendToClient new ServerGameControlMsg(code: ServerGameControlMsg.codes.ChooseField, data: data)
+            return 'waitForFieldChosen'
+        'waitForPieceChosen'
+    
+    waitForFieldChosen: (type, msg) ->
+        'waitForFieldChosen'
     
     getStartPieces: () ->
         pieces = []
         for x in [0..7]
                                # colorID, row, col, side
-            a = new GamingPiece(7-x, 0, x, 0)
+            a = new GamingPiece(7-x, 0, x, 6)
             b = new GamingPiece(x, 7, x, 1)
             
             @field.addGamingPiece(a)
             @field.addGamingPiece(b)
             
-            pieces.push (color: 7 - x, row: 0, col: x, side: 0)
-            pieces.push (color:     x, row: 7, col: x, side: 1)
+            pieces.push (color: 7 - x, row: 0, col: x, side: 0, dragonTeeth: 0)
+            pieces.push (color:     x, row: 7, col: x, side: 1, dragonTeeth: 0)
         
         return pieces
  

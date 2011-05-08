@@ -20,7 +20,11 @@ class MaikadosGame extends GameState
     constructor: (@ui, @field) ->
         super 'waitForNickResponse'
         
+        @loggedIn = false
         @ui.getNickName (nick, ai, handling) =>
+            if @loggedIn
+                handling.ok()
+                return
             if ClientLoginMsg.isValidNickname nick
                 @nickHandling = handling
                 @setupConnection(if ai then new AIConnectionObject() else new NetConnection())
@@ -29,8 +33,6 @@ class MaikadosGame extends GameState
                 @ui.setLoading on
             else
                 handling.getNew 'Ungültiger Nickname'
-        
-        @setupDebug()
     
     setupConnection: (@connection) ->
         @connection.onMessage (msg) =>
@@ -45,11 +47,12 @@ class MaikadosGame extends GameState
     - States
     ###
     waitForNickResponse: (type, msg) ->
-        if type is 'message' and msg instanceof ServerResponseCodeMsg
+        if type is 'message' and msg instanceof ResponseCodeMsg
             @ui.setLoading off
             {code} = msg
-            if code is ServerResponseCodeMsg.codes.OK
+            if code is ResponseCodeMsg.codes.OK
                 @nickHandling.ok()
+                @loggedIn = true
                 delete @nickHandling
                 return 'waitForGameStart'
             else
@@ -59,66 +62,126 @@ class MaikadosGame extends GameState
     waitForGameStart: (type, msg) ->
         if type is 'message' and msg instanceof ServerGameStartMsg
             {opponent, side, pieces} = msg
+            @opponent = opponent
+            @side = side
+            for {color, row, col, side, dragonTeeth} in pieces
+                piece = new GamingPiece color, row, col, side
+                piece.setDragonTeeth dragonTeeth
+                @field.addGamingPiece piece
+            @ui.update()
+            @ui.postNotification "Das Spiel beginnt, du spielst gegen <em>#{opponent}</em>"
             infos = {}
             infos["player#{1 - side}Name"] = opponent
             infos["player#{side}Name"] = @nick
             @ui.setGameInformation(infos)
+            return 'waitForGameControl'
+        'waitForGameStart'
+    
+    waitForGameControl: (type, msg) ->
+        if type is 'message' and msg instanceof ServerGameControlMsg
+            switch msg.code
+                when ServerGameControlMsg.codes.WaitForOpponent
+                    {data} = msg
+                    @setCountdown data
+                    return 'waitForGameAction'
+                when ServerGameControlMsg.codes.ChoosePiece
+                    sendSelection = (piece) =>
+                        nr = parseInt(piece.split('-')[1])
+                        @connection.send new GameActionMsg(action: GameActionMsg.actions.PieceChosen, data: nr)                    
+                        @resumeFSM()
+                    {data} = msg
+                    @pauseFSM()
+                    @ui.postNotification "Wähle einen Stein aus! (#{data}s)", 'game'
+                    @setCountdown data, () =>
+                        @ui.postNotification 'Zeit überschritten, zufälliger Stein ausgewählt ☺', 'game'
+                        @ui.stop()
+                        sendSelection "#{@side}-#{Math.round Math.random() * 7}"
+                    @ui.getPieceSelection ("#{@side}-#{p}" for p in [0..7]), (selectedPiece) =>
+                        @stopCountdown()
+                        sendSelection selectedPiece
+                    return 'waitForGameControl'
+                when ServerGameControlMsg.codes.ChooseField
+                    {data} = msg
+                    [piece, fields, time] = data
+                    sendSelection = (nr) =>
+                        @connection.send new GameActionMsg(action: GameActionMsg.actions.FieldChosen, data: nr)
+                        @animateMove piece, nr, () => @resumeFSM()
+                    @pauseFSM()
+                    if fields.length is 0
+                        @ui.postNotification 'Stein blockiert', 'game'
+                        @ui.getUIPiece(piece).animateBlocked(() => @resumeFSM())
+                        return 'waitForGameControl'
+                    else
+                        @ui.getMoveDestination piece, fields, (p) =>
+                            @stopCountdown()
+                            sendSelection p
+                        @setCountdown time, () =>
+                            @ui.postNotification 'Zeit überschritten, zufälliger Zug ausgewählt ☺', 'game'
+                            @ui.stop()
+                            sendSelection fields[Math.round Math.random() * (fields.length - 1)]
+                    return 'waitForGameControl'
+                when ServerGameControlMsg.codes.AddDragonTooth
+                    {data} = msg
+                    [piece, val] = data
+                    @pauseFSM()
+                    @field.getGamingPiece(piece).setDragonTeeth(val)
+                    @ui.update () => @resumeFSM()
+                    return 'waitForGameControl'
+                # TODO: implement others
+        'waitForGameControl'
+    
+    waitForGameAction: (type, msg) ->
+        if type is 'message' and msg instanceof GameActionMsg
+            switch msg.action
+                when GameActionMsg.actions.PieceChosen
+                    {data} = msg
+                    @ui.postNotification "<em>#{@opponent}</em> hat einen Stein gewählt", 'game'
+                    @setCountdown data
+                    return 'waitForGameAction'
+                when GameActionMsg.actions.FieldChosen
+                    @pauseFSM()
+                    {data} = msg
+                    [piece, nr] = data
+                    @animateMove(piece, nr, () => @resumeFSM())
+                    return 'waitForGameControl'
+                
+        @stopCountdown()
+        
+        'waitForGameAction'
     
     ###
     - Helper
     ###
-    setupDebug: () ->
-        rand = (a, b) -> Math.round(Math.random() * (b - a)) + a
-        dragonPieceNr = () ->
-            p = rand 1, 31
-            if p < 2
-                4
-            else if p < 4
-                3
-            else if p < 8
-                2
-            else if p < 16
-                1
-            else 0
-        for x in [0..7]
-            a = new GamingPiece(7-x, 0, x, 0)
-            b = new GamingPiece(x, 7, x, 1)
-            a.setDragonTeeth(dragonPieceNr())
-            b.setDragonTeeth(dragonPieceNr())
-            @field.addGamingPiece(a)
-            @field.addGamingPiece(b)
+    
+    animateMove: (piece, nr, callback) ->
+        kickedPieces = @field.getKickedPieces(nr)
+        if kickedPieces.length isnt 0
+            side = kickedPieces[0].getSide()
+            for p in kickedPieces
+                p.setRow(p.getRow() - (if side is 0 then 1 else -1))
+        row = Math.floor(nr / 8)
+        col = nr - row * 8
+        @field.getGamingPiece(piece).setRow(row).setCol(col)
+        @ui.update(() => callback)
+    
+    setCountdown: (seconds, callback) ->
+        @stopCountdown()
         
-        @ui.update()
-        
-        pos = 100
-        countDown = () =>
-            pos = 100 if pos < 0
-            @ui.setProgressBar(pos)
-            pos -= 1
-            window.setTimeout (() -> countDown()), 500
-        countDown()
-        
-        @ui.postNotification "Wähle einen Stein aus!"
-        @ui.getPieceSelection ("1-#{p}" for p in [0..7]), (pieceId) =>
-            pieceUI = @ui.getUIPiece(pieceId)
-            (p = pieceUI.getPiece()).setDragonTeeth p.getDragonTeeth() + 1
-            alert("Drachenstein Animation")
-            @ui.update(() ->
-                alert("Geblockter Stein Animation")
-                pieceUI.animateBlocked())
-            # fields = []
-            # {row, col} = @ui.pieces[pieceId]
-            # a = b = i = row * 8 + col
-            # mod = (a, m) -> a - Math.floor(a/m) * m
-            # (fields.push a) while ((a -= 9) % 8) >= 0 and (a % 8) < (i % 8) and  a > 7
-            # (fields.push b) while ((b -= 7) % 8) > 0 and b > 7
-            # (fields.push i) while (i -= 8) > 7
-            # 
-            # @ui.getMoveDestination pieceId, fields, (selectedField) =>
-            #     row = Math.floor(selectedField / 8)
-            #     col = selectedField - row * 8
-            #     @field.pieces[pieceId].setCol(col).setRow(row)
-            #     @ui.update()
+        diff = seconds * 10 # 1000 * 0.1
+        @ui.setProgressBar(@countdownVal = 100)
+        @countdown = window.setInterval((() =>
+            if @countdownVal < 0
+                @stopCountdown()
+                window.setTimeout((() -> callback()), 0) if callback
+            else
+                @ui.setProgressBar(--@countdownVal)
+        ), diff)
+    
+    stopCountdown: () ->
+        window.clearInterval(@countdown) if @countdown isnt undefined
+        @ui.setProgressBar 0
+        delete @countdown
+        delete @countdownVal
 
 $( ->
     field = new GameField()

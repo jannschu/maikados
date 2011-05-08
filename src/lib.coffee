@@ -19,7 +19,24 @@ class GameState
     
     constructor: (initState) ->
         @_currentState = initState
+        @_paused = false
+        @_msgStack = []
     
     sendEvent: (type, msg) ->
-        window.setTimeout((() =>
-            @_currentState = this[@_currentState](type, msg)), 0)
+        if @_paused
+            @_msgStack.push [type, msg]
+        else
+            window.setTimeout((() =>
+                @_currentState = this[@_currentState](type, msg) unless @_paused), 0)
+    
+    pauseFSM: () ->
+        @_paused = true
+    
+    resumeFSM: () ->
+        @_paused = false
+        processStack = () =>
+            unless @_msgStack.length is 0
+                [type, msg] = @_msgStack.pop()
+                @_currentState = this[@_currentState](type, msg)
+                window.setTimeout (() -> processStack()), 0
+        processStack()

@@ -46,6 +46,10 @@ class UIField
             23.391C29.432,27.154,30.363,25.541,29.225,23.567zM16.536,24.58h-2.241
             v-2.151h2.241V24.58zM16.428,20.844h-2.023l-0.201-9.204h2.407L16.428,20.844z',
             {fill: '#BA4143', stroke: 'none'}]
+        game: ['M15.999,22.77l-8.884,6.454l3.396-10.44l-8.882-6.454l10.979,
+            0.002l2.918-8.977l0.476-1.458l3.39,10.433h10.982l-8.886,6.454l3.397,
+            10.443L15.999,22.77L15.999,22.77z',
+            {fill: '#FFE800', stroke: 'none'}]
     
     constructor: (element, @gameField) ->
         @progressBar = new Raphael(element, 600, 10)
@@ -58,7 +62,7 @@ class UIField
         
         $('#nicknameErrorMsg').prepend($('#svg-warn'))
         
-        $.jnotify.setup(delay: 8000)
+        $.jnotify.setup(delay: 5000)
         
         @pieces = {}
         
@@ -70,6 +74,7 @@ class UIField
         @progressBarBalls = @_drawProgressBar()
         
         @loading = off
+        @stoppers = {}
     
     getFieldSize: () ->
         @fieldSize
@@ -78,10 +83,12 @@ class UIField
         callbackList = []
         traverse = () ->
             if callbackList.length is 0
-                window.setTimeout (() -> callback() if callback), 0
+                window.setTimeout (() -> callback()), 0 if callback
             else
                 f = callbackList.shift()
                 f(traverse)
+        movePiecesList = []
+        dragonTeethList = []
         for pieceID, piece of @gameField.pieces
             do (pieceID, piece) =>
                 uiPiece = (@pieces[pieceID] ?= new UIGamingPiece(piece, this))
@@ -89,12 +96,19 @@ class UIField
                 col = piece.getCol()
                 # move
                 if row != uiPiece.row or col != uiPiece.col
-                    callbackList.push((f) =>
-                        @pieces[pieceID].move(f))
+                    movePiecesList.push(@pieces[pieceID])
                 # dragon tooth TODO
                 dragonTeeth = piece.getDragonTeeth()
                 if dragonTeeth != uiPiece.dragonToothPieces.length
-                    callbackList.push (f) -> uiPiece.updateDragonTeeth(f)
+                    dragonTeethList.push uiPiece
+        callbackList.push (f) ->
+            last = movePiecesList.length - 1
+            for p, i in movePiecesList
+                p.move(if i is last then f else undefined)
+        callbackList.push (f) ->
+            last = dragonTeethList.length - 1
+            for p, i in dragonTeethList
+                p.updateDragonTeeth(if i is last then f else undefined)
         traverse()
     
     getUIPiece: (id) -> @pieces[id]
@@ -154,11 +168,23 @@ class UIField
         elem = $("#svg-#{sign}").clone().removeProp('id')
         $.jnotify(msg, create: (e) -> $('.jnotify-message', e).prepend(elem))
     
+    stop: () ->
+        for action, methods of @stoppers
+            for m in methods
+                m()
+        @stoppers = {}
+    
     getPieceSelection: (validPieces, callback) ->
         # TODO: swap
         fields = []
         elements = []
         b = $('body')
+        @stoppers['getPieceSelection'] = [() -> b.removeClass('pointer-cursor')]
+        @stoppers['getPieceSelection'].push () =>
+            for e in elements
+                e.unbind('click').unbind('mouseenter').unbind('mouseleave')
+                @_highlightFields([0..63])
+        
         for piece in validPieces
             do (piece) =>
                 {row, col} = @pieces[piece]
@@ -170,29 +196,32 @@ class UIField
                          (() -> b.removeClass('pointer-cursor')))
                 
                 el.click () =>
-                    for e in elements
-                        e.unbind('click').unbind('mouseenter').unbind('mouseleave')
-                    b.removeClass('pointer-cursor')
-                    @_highlightFields([0..63])
-                    window.setTimeout (() -> callback(piece) if callback), 0
+                    @stop()
+                    window.setTimeout (() -> callback(piece)), 0 if callback
         @_highlightFields(fields)
     
     getMoveDestination: (pieceID, validFields, callback) ->
         clickableBackgroundPieces = []
         b = $('body')
+        @stoppers['getMoveDestination'] = [() -> b.removeClass('pointer-cursor')]
+        @stoppers['getMoveDestination'].push () =>
+            for tile in clickableBackgroundPieces
+                tile.unbind('click').unbind('mouseenter').unbind('mouseleave')
+            @_highlightFields([0..63])
+        
         for field in validFields
             if @swapped
                 field = 63-field
             row = Math.floor field / 8
             col = field - row * 8
             do (field) =>
-                clickableBackgroundPieces.push(elem = @backgroundPieces[row][col].node)
+                elem = $(@backgroundPieces[row][col].node)
+                if (p = @gameField.pieceOnField field) isnt null
+                    elem = elem.add($("#piece-#{p.getID()}"))
+                clickableBackgroundPieces.push(elem)
                 $(elem).click( () =>
-                    for tile in clickableBackgroundPieces
-                        $(tile).unbind('click').unbind('mouseenter').unbind('mouseleave')
-                    b.removeClass('pointer-cursor')
-                    @_highlightFields([0..63])
-                    window.setTimeout (() -> callback(field) if callback), 0
+                    @stop()
+                    window.setTimeout (() -> callback(field)), 0 if callback
                 ).hover((() => b.addClass('pointer-cursor') unless @loading),
                         (() -> b.removeClass('pointer-cursor')))
         @_highlightFields(validFields)

@@ -50,6 +50,9 @@ class GameField
     
     constructor: () ->
         @pieces = {}
+        @winPoints = 1
+    
+    getWinPoints: () -> @winPoints
     
     addGamingPiece: (piece) -> @pieces[piece.getID()] = piece
     
@@ -77,13 +80,13 @@ class GameField
             if (dt = piece.getDragonTeeth()) > 0 and rowDiff is 1
                 lineUp = [i, i -= I, i -= I, i -= I]
                 if lineUp[0] is null
-                    fields.push i
+                    fields.push lineUp[0]
                 else
                     ppList = (@pieceOnField pp for pp in lineUp)
                     pieceLineLength = 0
                     maxDt = 0
                     for p in ppList
-                        break unless p
+                        break if p is null or p.getSide() is piece.getSide()
                         if (dtt = p.getDragonTeeth()) > maxDt
                             maxDt = dtt
                         ++pieceLineLength
@@ -93,7 +96,8 @@ class GameField
                     fields.push lineUp[0]
                     break
             else
-                fields.push i unless @pieceOnField i
+                break if @pieceOnField i
+                fields.push i 
         
         return fields
     
@@ -101,6 +105,36 @@ class GameField
         for id, p of @pieces
             return p if (p.getRow() * 8 + p.getCol()) is nr
         null
+    
+    getPointsForSide: (side) ->
+        p = [0, 1, 3, 7, 15]
+        points = 0
+        for i in [0..7]
+            piece = @getGamingPiece("#{side}-#{i}")
+            points += p[piece.getDragonTeeth()]
+        points
+    
+    getColorIDForPiece: (id) ->
+        piece = @getGamingPiece(id)
+        UI.fieldRows[piece.getRow()][piece.getCol()]
+    
+    getColorIDForMoveTo: (nr) ->
+        row = Math.floor(nr / 8)
+        col = nr - row * 8
+        kickedPieces = if @pieceOnField(nr) then @getKickedPieces(nr) else []
+        if kickedPieces.length isnt 0
+            console.log "kicked"
+            pieceId = undefined
+            col = kickedPieces[0].getCol()
+            side = kickedPieces[0].getSide()
+            for p in kickedPieces
+                c = p.getCol()
+                if side is 0
+                    col = c if c < col
+                else
+                    col = c if c > col
+            col += if side is 0 then -1 else 1
+        UI.fieldRows[row][col]
     
     getKickedPieces: (nr) ->
         inCol = []

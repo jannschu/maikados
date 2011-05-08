@@ -27,7 +27,11 @@ class GameState
             @_msgStack.push [type, msg]
         else
             window.setTimeout((() =>
-                @_currentState = this[@_currentState](type, msg) unless @_paused), 0)
+                if @_paused
+                    @_msgStack.push [type, msg]
+                else
+                    @_currentState = this[@_currentState](type, msg)
+            ), 0)
     
     pauseFSM: () ->
         @_paused = true
@@ -35,8 +39,10 @@ class GameState
     resumeFSM: () ->
         @_paused = false
         processStack = () =>
-            unless @_msgStack.length is 0
-                [type, msg] = @_msgStack.pop()
+            if @_msgStack.length isnt 0 and !@_paused
+                [type, msg] = @_msgStack.shift()
                 @_currentState = this[@_currentState](type, msg)
                 window.setTimeout (() -> processStack()), 0
         processStack()
+    
+    IDLE: () -> 'IDLE'

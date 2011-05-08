@@ -82,7 +82,9 @@ class MaikadosGame extends GameState
             switch msg.code
                 when ServerGameControlMsg.codes.WaitForOpponent
                     {data} = msg
-                    @setCountdown data
+                    [time, piece] = data
+                    @currentPiece = piece
+                    @setCountdown time
                     return 'waitForGameAction'
                 when ServerGameControlMsg.codes.ChoosePiece
                     sendSelection = (piece) =>
@@ -99,18 +101,18 @@ class MaikadosGame extends GameState
                     @ui.getPieceSelection ("#{@side}-#{p}" for p in [0..7]), (selectedPiece) =>
                         @stopCountdown()
                         sendSelection selectedPiece
-                    return 'waitForGameControl'
                 when ServerGameControlMsg.codes.ChooseField
                     {data} = msg
                     [piece, fields, time] = data
+                    @currentPiece = piece
                     sendSelection = (nr) =>
                         @connection.send new GameActionMsg(action: GameActionMsg.actions.FieldChosen, data: nr)
-                        @animateMove piece, nr, () => @resumeFSM()
+                        (@animateMove piece, nr, () => @resumeFSM()) if nr isnt null
                     @pauseFSM()
                     if fields.length is 0
                         @ui.postNotification 'Stein blockiert', 'game'
                         @ui.getUIPiece(piece).animateBlocked(() => @resumeFSM())
-                        return 'waitForGameControl'
+                        sendSelection null
                     else
                         @ui.getMoveDestination piece, fields, (p) =>
                             @stopCountdown()
@@ -119,30 +121,36 @@ class MaikadosGame extends GameState
                             @ui.postNotification 'Zeit überschritten, zufälliger Zug ausgewählt ☺', 'game'
                             @ui.stop()
                             sendSelection fields[Math.round Math.random() * (fields.length - 1)]
-                    return 'waitForGameControl'
                 when ServerGameControlMsg.codes.AddDragonTooth
                     {data} = msg
                     [piece, val] = data
                     @pauseFSM()
                     @field.getGamingPiece(piece).setDragonTeeth(val)
                     @ui.update () => @resumeFSM()
-                    return 'waitForGameControl'
+                when ServerGameControlMsg.codes.YouLost
+                    @ui.gameEndedNotice 'lost'
+                    return 'IDLE'
+                when ServerGameControlMsg.codes.YouWin
+                    @ui.gameEndedNotice 'won'
+                    return 'IDLE'
                 # TODO: implement others
         'waitForGameControl'
     
     waitForGameAction: (type, msg) ->
         if type is 'message' and msg instanceof GameActionMsg
             switch msg.action
-                when GameActionMsg.actions.PieceChosen
+                when GameActionMsg.actions.PieceChosen # TODO
                     {data} = msg
                     @ui.postNotification "<em>#{@opponent}</em> hat einen Stein gewählt", 'game'
                     @setCountdown data
                     return 'waitForGameAction'
                 when GameActionMsg.actions.FieldChosen
-                    @pauseFSM()
                     {data} = msg
-                    [piece, nr] = data
-                    @animateMove(piece, nr, () => @resumeFSM())
+                    @pauseFSM()
+                    if data is null
+                        @ui.getUIPiece(@currentPiece).animateBlocked(() => @resumeFSM())
+                    else
+                        @animateMove(@currentPiece, data, () => @resumeFSM())
                     return 'waitForGameControl'
         @stopCountdown()
         'waitForGameAction'
@@ -152,16 +160,22 @@ class MaikadosGame extends GameState
     ###
     
     animateMove: (piece, nr, callback) ->
-        kickedPieces = @field.getKickedPieces(nr)
+        row = Math.floor(nr / 8)
+        col = nr - row * 8
+        gp = @field.getGamingPiece(piece)
+        if row is 7 or row is 0
+            gp.setDragonTeeth(gp.getDragonTeeth() + 1)
+            @ui.setGameInformation 'update'
+        if gp.getCol() is col and @field.pieceOnField(nr) isnt null
+            kickedPieces = field.getKickedPieces(nr)
+        else
+            kickedPieces = []
         if kickedPieces.length isnt 0
             side = kickedPieces[0].getSide()
             for p in kickedPieces
                 p.setRow(p.getRow() - (if side is 0 then 1 else -1))
-        row = Math.floor(nr / 8)
-        col = nr - row * 8
-        (gp = @field.getGamingPiece(piece)).setRow(row).setCol(col)
-        gp.setDragonTeeth(gp.getDragonTeeth() + 1) if row is 7 or row is 0
-        @ui.update(() => callback)
+        gp.setRow(row).setCol(col)
+        @ui.update(callback)
     
     setCountdown: (seconds, callback) ->
         @stopCountdown()

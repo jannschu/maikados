@@ -79,6 +79,13 @@ class UIField
     getFieldSize: () ->
         @fieldSize
     
+    gameEndedNotice: (forWhat) ->
+        # TODO
+        if forWhat is 'won'
+            alert 'Glückwunsch, gewonnen'
+        else
+            alert 'Leider verloren'
+    
     update: (callback) ->
         callbackList = []
         traverse = () ->
@@ -97,16 +104,18 @@ class UIField
                 # move
                 if row != uiPiece.row or col != uiPiece.col
                     movePiecesList.push(@pieces[pieceID])
-                # dragon tooth TODO
+                # dragon tooth
                 dragonTeeth = piece.getDragonTeeth()
                 if dragonTeeth != uiPiece.dragonToothPieces.length
                     dragonTeethList.push uiPiece
         callbackList.push (f) ->
             last = movePiecesList.length - 1
+            window.setTimeout((() -> f()), 0) if last < 0
             for p, i in movePiecesList
                 p.move(if i is last then f else undefined)
         callbackList.push (f) ->
             last = dragonTeethList.length - 1
+            window.setTimeout((() -> f()), 0) if last < 0
             for p, i in dragonTeethList
                 p.updateDragonTeeth(if i is last then f else undefined)
         traverse()
@@ -227,21 +236,10 @@ class UIField
         @_highlightFields(validFields)
     
     setGameInformation: (info) ->
-        gameType = info.gameType ? 4
         updatePoints = () =>
-            points = [0, 1, 3, 7, 15]
-            points0 = 0
-            points1 = 0
-            for id, piece of @pieces
-                piece = piece.getPiece()
-                if piece.getSide() is 0
-                    points0 += points[piece.getDragonTeeth()]
-                else
-                    points1 += points[piece.getDragonTeeth()]
-            n = Math.ceil((Math.log Math.max(points0, points1) + 1) / (Math.log 2))
-            max = Math.pow(2, Math.min(gameType, n)) - 1
-            $('#player0Points').text("#{points0} / #{max}")
-            $('#player1Points').text("#{points1} / #{max}")
+            max = @gameField.getWinPoints()
+            $('#player0Points').text("#{@gameField.getPointsForSide(0)} / #{max}")
+            $('#player1Points').text("#{@gameField.getPointsForSide(1)} / #{max}")
         
         if info is 'update'
             updatePoints()
@@ -369,11 +367,8 @@ class UIGamingPiece
         @col = @piece.getCol()
         
         fieldSize = @field.getFieldSize()
-        
         @r = fieldSize * 0.5 * 0.8
-        
-        @cx = fieldSize * (@col + 0.5)
-        @cy = fieldSize * (@row + 0.5)
+        @_setCenterPositions()
         
         @set = @_drawPiece()
     
@@ -488,6 +483,8 @@ class UIGamingPiece
                 withObj = elem
     
     updateDragonTeeth: (callback) ->
+        @_setCenterPositions()
+        
         current = @dragonToothPieces.length
         goal = @piece.getDragonTeeth()
         
@@ -566,6 +563,11 @@ class UIGamingPiece
     ###
     - private methods
     ###
+    
+    _setCenterPositions: () ->
+        fieldSize = @field.getFieldSize()
+        @cx = fieldSize * (@col + 0.5)
+        @cy = fieldSize * (@row + 0.5)
     
     _drawPiece: () ->
         fieldSize = @field.getFieldSize()

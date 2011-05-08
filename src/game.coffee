@@ -95,7 +95,7 @@ class MaikadosGame extends GameState
                     @pauseFSM()
                     @ui.postNotification "Wähle einen Stein aus! (#{data}s)", 'game'
                     @setCountdown data, () =>
-                        @ui.postNotification 'Zeit überschritten, zufälliger Stein ausgewählt ☺', 'game'
+                        @ui.postNotification 'Zeit überschritten, zufälliger Stein ausgewählt', 'game'
                         @ui.stop()
                         sendSelection "#{@side}-#{Math.round Math.random() * 7}"
                     @ui.getPieceSelection ("#{@side}-#{p}" for p in [0..7]), (selectedPiece) =>
@@ -118,7 +118,7 @@ class MaikadosGame extends GameState
                             @stopCountdown()
                             sendSelection p
                         @setCountdown time, () =>
-                            @ui.postNotification 'Zeit überschritten, zufälliger Zug ausgewählt ☺', 'game'
+                            @ui.postNotification 'Zeit überschritten, zufälliger Zug ausgewählt', 'game'
                             @ui.stop()
                             sendSelection fields[Math.round Math.random() * (fields.length - 1)]
                 when ServerGameControlMsg.codes.AddDragonTooth

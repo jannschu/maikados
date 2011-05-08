@@ -52,7 +52,7 @@ class UIField
             {fill: '#FFE800', stroke: 'none'}]
     
     constructor: (element, @gameField) ->
-        @progressBar = new Raphael(element, 600, 10)
+        @progressBar = new Raphael(element, 600 + 2, 10)
         @paper = new Raphael(element, 600 + 2, 600 + 2)
         
         for name, data of signs
@@ -192,7 +192,7 @@ class UIField
         @stoppers['getPieceSelection'].push () =>
             for e in elements
                 e.unbind('click').unbind('mouseenter').unbind('mouseleave')
-                @_highlightFields([0..63])
+            @_highlightFields([0..63])
         
         for piece in validPieces
             do (piece) =>
@@ -216,7 +216,7 @@ class UIField
         @stoppers['getMoveDestination'].push () =>
             for tile in clickableBackgroundPieces
                 tile.unbind('click').unbind('mouseenter').unbind('mouseleave')
-            @_highlightFields([0..63])
+            @_highlightFields([], true)
         
         for field in validFields
             if @swapped
@@ -233,7 +233,7 @@ class UIField
                     window.setTimeout (() -> callback(field)), 0 if callback
                 ).hover((() => b.addClass('pointer-cursor') unless @loading),
                         (() -> b.removeClass('pointer-cursor')))
-        @_highlightFields(validFields)
+        @_highlightFields(validFields, true)
     
     setGameInformation: (info) ->
         updatePoints = () =>
@@ -277,7 +277,8 @@ class UIField
             for y in [0..7]
                 registerHoverFor this, @backgroundPieces[y][x], y * 8 + x
     
-    _highlightFields: (fields) ->
+    _highlightFields: (fields, rings = false) ->
+        @_highlightRings ?= {}
         fieldMap = {}
         for i in [0..63]
             fieldMap[i] = off
@@ -285,29 +286,46 @@ class UIField
             fieldMap[i] = on
         
         size = 2
-        
         for i, status of fieldMap
             row = Math.floor i / 8
             col = i - row * 8
-            piece = @backgroundPieces[row][col]
-            
-            attrs = if status
-                (
-                    opacity: 1
-                    x: (col * @fieldSize)
-                    y: (row * @fieldSize)
-                    height: @fieldSize
-                    width: @fieldSize)
+            if rings
+                ring = @_highlightRings[i]
+                if !ring and status
+                    cx = (col + 0.5) * @fieldSize + 1
+                    cy = (row + 0.5) * @fieldSize + 1
+                    strokeWidth = 3
+                    @_highlightRings[i] = ring = @paper.circle(cx, cy, @fieldSize * 0.5 * 0.8 - strokeWidth)
+                    ring.attr 'stroke-width': strokeWidth, 'stroke-opacity': 0, 'opacity': '0.3'
+                ring.stop() if ring
+                if status
+                    ring.animate 'stroke-opacity': 1, 300
+                else if ring
+                    console.log "delete ring"
+                    do (ring, i) =>
+                        ring.animate 'stroke-opacity': 0, 300, callback: () =>
+                            delete @_highlightRings[i]
+                            ring.remove()
             else
-                (
-                    opacity: 0.90
-                    x: (col * @fieldSize) + size / 2
-                    y: (row * @fieldSize) + size / 2
-                    height: @fieldSize - size
-                    width: @fieldSize - size)
+                piece = @backgroundPieces[row][col]
             
-            piece.stop()
-            piece.animate(attrs, 300)
+                attrs = if status
+                    (
+                        opacity: 1
+                        x: (col * @fieldSize + 1)
+                        y: (row * @fieldSize + 1)
+                        height: @fieldSize
+                        width: @fieldSize)
+                else
+                    (
+                        opacity: 0.4
+                        x: (col * @fieldSize) + size / 2 + 1
+                        y: (row * @fieldSize) + size / 2 + 1
+                        height: @fieldSize - size
+                        width: @fieldSize - size)
+            
+                piece.stop()
+                piece.animate(attrs, 300)
     
     _swapBackground: (callback) ->
         animationObj = null

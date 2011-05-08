@@ -129,9 +129,11 @@ class MaikadosGame extends GameState
                     @ui.update () => @resumeFSM()
                 when ServerGameControlMsg.codes.YouLost
                     @ui.gameEndedNotice 'lost'
+                    @stopCountdown()
                     return 'IDLE'
                 when ServerGameControlMsg.codes.YouWin
                     @ui.gameEndedNotice 'won'
+                    @stopCountdown()
                     return 'IDLE'
                 # TODO: implement others
         'waitForGameControl'

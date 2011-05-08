@@ -175,7 +175,13 @@ class AIPlayer
             if moves.length is 0
                 move = null
             else
-                move = moves[Math.round(Math.random() * (moves.length - 1))]
+                # Use winning move if possible
+                for potentialMove in moves
+                    if (potentialMove - 55) >= 1
+                        move = potentialMove
+                # if all else fails...
+                if not move
+                    move = moves[Math.round(Math.random() * (moves.length - 1))]
             
             if moveFound
                 # ´move' should be a field number. Field:

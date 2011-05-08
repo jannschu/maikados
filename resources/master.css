@@ -23,9 +23,9 @@
  
 body {
   font-family: "Helvetica Neue", "Helvetica";
-  background: #1B0F00;
+  background: #FFF;
   font-weight: 300;
-  color: #C2CDEC;
+  color: #131B2F;
   font-size: 0.9em;
 }
 
@@ -39,18 +39,18 @@ h1, h2, h3 {
 }
 
 a {
-  color: #FFE4E1;
+  color: #E17800;
   text-decoration: none;
   font-weight: 200;
 }
 
-a:hover { color: #FFCF8B; }
+a:hover { color: #FFC699; }
 
 #game {
   position: relative;
   display: block;
-  width: 600px;
-  height: 600px;
+  width: 602px;
+  height: 602px;
   margin: auto;
   margin-bottom: 4em;
 }
@@ -75,7 +75,7 @@ a:hover { color: #FFCF8B; }
 #player0Name, #player1Name {
     display: block;
     font-size: 1.7em;
-    color: #FEEEF0;
+    color: black;
 }
 
 #player0Name { margin-top: 40px; }

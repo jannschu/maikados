@@ -18,7 +18,7 @@
 UI = # UI constants
     colorMap: [
             '#FF8000', '#F00', '#1FA53A', '#FC599F',
-            '#F6AB00', '#68CCFF', '#0048AB', '#5D1E9B']
+            '#FFE122', '#68CCFF', '#0048AB', '#5D1E9B']
     
     fieldRows: [
         [7,6,5,4,3,2,1,0],
@@ -53,7 +53,7 @@ class UIField
     
     constructor: (element, @gameField) ->
         @progressBar = new Raphael(element, 600, 10)
-        @paper = new Raphael(element, 600, 600)
+        @paper = new Raphael(element, 600 + 2, 600 + 2)
         
         for name, data of signs
             [path, attrs] = data
@@ -66,7 +66,7 @@ class UIField
         
         @pieces = {}
         
-        @fieldSize = @paper.width / 8 # should be a square
+        @fieldSize = (@paper.width - 2) / 8 # should be a square
         @swapped = false
         @backgroundPieces = ([] for col in [0..7])
         
@@ -300,7 +300,7 @@ class UIField
                     width: @fieldSize)
             else
                 (
-                    opacity: 0.5
+                    opacity: 0.7
                     x: (col * @fieldSize) + size / 2
                     y: (row * @fieldSize) + size / 2
                     height: @fieldSize - size
@@ -321,8 +321,8 @@ class UIField
                     @backgroundPieces[row][col] = @backgroundPieces[7 - row][7 - col]
                     @backgroundPieces[7 - row][7 - col] = me
                 attr =
-                    "50%" : (x: (7 - col) * @fieldSize, rotation: 45)
-                    "100%": (y: (7 - row) * @fieldSize, rotation: 0)
+                    "50%" : (x: (7 - col) * @fieldSize + 1, rotation: 45)
+                    "100%": (y: (7 - row) * @fieldSize + 1, rotation: 0)
                 if animationObj
                    me.animateWith animationObj, attr, time
                 else
@@ -342,14 +342,14 @@ class UIField
         for i in [1..n]
             newHue = hue + step
             balls.push @progressBar.circle((2 * r + a) * (i - 1) + r, r, 0).
-                attr(fill: "0-hsb(#{hue}°, .5, .5)-hsb(#{newHue}°, .5, .5)", 'fill-opacity': '50%', stroke: 'none')
+                attr(fill: "0-hsb(#{hue}°, .3, 1)-hsb(#{newHue}°, .3, 1)", 'fill-opacity': '50%', stroke: 'none')
             hue = newHue
         balls
     
     _drawBackground: ->
         for rowData, rowNr in UI.fieldRows
             for colorIndex, col in rowData
-                rect = @paper.rect(@fieldSize * col, @fieldSize * rowNr, @fieldSize, @fieldSize, 5)
+                rect = @paper.rect(@fieldSize * col + 1, @fieldSize * rowNr + 1, @fieldSize, @fieldSize, 5)
                 rect.attr fill: UI.colorMap[colorIndex]
                 @backgroundPieces[rowNr][col] = rect
     
@@ -566,8 +566,8 @@ class UIGamingPiece
     
     _setCenterPositions: () ->
         fieldSize = @field.getFieldSize()
-        @cx = fieldSize * (@col + 0.5)
-        @cy = fieldSize * (@row + 0.5)
+        @cx = fieldSize * (@col + 0.5) + 1
+        @cy = fieldSize * (@row + 0.5) + 1
     
     _drawPiece: () ->
         fieldSize = @field.getFieldSize()

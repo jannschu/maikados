@@ -216,7 +216,8 @@ class UIField
         @stoppers['getMoveDestination'].push () =>
             for tile in clickableBackgroundPieces
                 tile.unbind('click').unbind('mouseenter').unbind('mouseleave')
-            @_highlightFields([], true)
+            @_highlightFields [0..63]
+            @_highlightFields [], true
         
         for field in validFields
             if @swapped
@@ -233,7 +234,11 @@ class UIField
                     window.setTimeout (() -> callback(field)), 0 if callback
                 ).hover((() => b.addClass('pointer-cursor') unless @loading),
                         (() -> b.removeClass('pointer-cursor')))
-        @_highlightFields(validFields, true)
+        nr = (p = @gameField.getGamingPiece(pieceID)).getRow() * 8 + p.getCol()
+        list = [0..63]
+        list.splice(nr, 1)
+        @_highlightFields list
+        @_highlightFields validFields, true
     
     setGameInformation: (info) ->
         updatePoints = () =>
@@ -295,7 +300,7 @@ class UIField
                     cx = (col + 0.5) * @fieldSize + 1
                     cy = (row + 0.5) * @fieldSize + 1
                     strokeWidth = 3
-                    @_highlightRings[i] = ring = @paper.circle(cx, cy, @fieldSize * 0.5 * 0.8 - strokeWidth)
+                    @_highlightRings[i] = ring = @paper.circle(cx, cy, @fieldSize * 0.5 * 0.8)
                     ring.attr 'stroke-width': strokeWidth, 'stroke-opacity': 0, 'opacity': '0.3'
                 ring.stop() if ring
                 if status

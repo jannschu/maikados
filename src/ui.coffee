@@ -300,7 +300,7 @@ class UIField
                     width: @fieldSize)
             else
                 (
-                    opacity: 0.7
+                    opacity: 0.90
                     x: (col * @fieldSize) + size / 2
                     y: (row * @fieldSize) + size / 2
                     height: @fieldSize - size

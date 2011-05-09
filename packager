@@ -18,8 +18,6 @@ puts "Create directories & copy binary files..."
 
 puts "Read index.html & get scripts and styles..."
 index = File.read 'index.html'
-css = ""
-index.gsub!(/<link[^>]*href="([^"]+)"[^>]*>/) { |path| css << get($1); '' }
 js = ""
 index.gsub!(/<script[^>]*src="([^"]+)"[^>]*><\/script>/) { |path| js << "\n\n" + get($1); '' }
 
@@ -31,9 +29,7 @@ index.sub!(/(<head>.*?)\s*<\/head>/m) do
   }
   js = File.read('__temp__.js')
   File.unlink('__temp__.js')
-  $1 +
-    "<style>" + css.gsub(/(\n+|\t+|\s{2,})|(\/\*.*?\*\/)/m, '') + "</style>" +
-    "<script>" + js + "</script>" +
+  $1 + "<script>" + js + "</script>" +
   '</head>'
 end
 

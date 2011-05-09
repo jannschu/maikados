@@ -17,21 +17,55 @@
 %%%     commands
 %%% ======================================
 
--record(clt_login, {name}).
--record(srv_response_code, {code}).
+-record(clt_login, {name}). % 0
+
+-record(response_code_msg, {code}). % 1
+-define(RESPONSE_CODE_MSG_OK, 0).
+-define(RESPONSE_CODE_MSG_Illegal, 1).
+-define(RESPONSE_CODE_MSG_Yes, 2).
+-define(RESPONSE_CODE_MSG_No, 3).
+-define(RESPONSE_CODE_MSG_Left, 4).
+-define(RESPONSE_CODE_MSG_Right, 5).
+
+-record(srv_game_start_msg, {opponent, side, pieces}). % 2
+
+-record(srv_game_ctrl_msg, {code, data}). % 3
+-define(SRV_GAME_CTRL_MSG_WaitForOpponent, 0).
+-define(SRV_GAME_CTRL_MSG_LostOpponentConnection, 1).
+-define(SRV_GAME_CTRL_MSG_ChoosePiece, 2).
+-define(SRV_GAME_CTRL_MSG_ChooseField, 3). % data = [pieceID, fields, time]
+-define(SRV_GAME_CTRL_MSG_YouLost, 4).
+-define(SRV_GAME_CTRL_MSG_YouWin, 5).
+-define(SRV_GAME_CTRL_MSG_NextModeQuestion, 6).
+-define(SRV_GAME_CTRL_MSG_NextMode, 7).
+
+-record(game_action_msg, {action, data}). % 4
+-define(GAME_ACTION_MSG_PieceChosen, 0).
+-define(GAME_ACTION_MSG_FieldChosen, 1).
+
+-define(MOVE_TIME, 60). % in seconds
 
 -ifdef(DEFINE_PROTCOL_COMMAND_FUNCTIONS).
 
 cmd2nr(clt_login) -> {ok, 0};
-cmd2nr(srv_response_code) -> {ok, 1};
+cmd2nr(response_code_msg) -> {ok, 1};
+cmd2nr(srv_game_start_msg) -> {ok, 2};
+cmd2nr(srv_game_ctrl_msg) -> {ok, 3};
+cmd2nr(game_action_msg) -> {ok, 4};
 cmd2nr(_) -> error.
 
 nr2cmd(0) -> {ok, clt_login};
-nr2cmd(1) -> {ok, srv_response_code};
+nr2cmd(1) -> {ok, response_code_msg};
+nr2cmd(2) -> {ok, srv_game_start_msg};
+nr2cmd(3) -> {ok, srv_game_ctrl_msg};
+nr2cmd(4) -> {ok, game_action_msg};
 nr2cmd(_) -> error.
 
 cmd_fields(clt_login) -> {ok, [name]};
-cmd_fields(srv_response_code) -> {ok, [code]};
+cmd_fields(response_code_msg) -> {ok, [code]};
+cmd_fields(srv_game_start_msg) -> {ok, [opponent, side, pieces]};
+cmd_fields(srv_game_ctrl_msg) -> {ok, [code, data]};
+cmd_fields(game_action_msg) -> {ok, [action, data]};
 cmd_fields(_) -> error.
 
 -endif.

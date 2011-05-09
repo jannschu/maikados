@@ -7,9 +7,11 @@
     maikados_client,
     maikados_client_listener,
     maikados_client_sup,
+    maikados_game,
     maikados_game_sup,
     maikados_players,
-    maikados_protocol
+    maikados_protocol,
+    maikados_field
   ]},
   {registered, []},
   {applications, [kernel, stdlib]},

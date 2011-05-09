@@ -20,7 +20,15 @@
 -module(maikados_game_sup).
 
 -behaviour(supervisor).
--export([start_link/0, init/1]).
+-export([start_link/0, new_game/2, init/1]).
+
+%% --------------------------------------
+%% @doc Creates new maikados_game returns pid
+%% @end
+%% --------------------------------------
+new_game(Player0, Player1) ->
+    {ok, Pid} = supervisor:start_child(?MODULE, [Player0, Player1]),
+    Pid.
 
 %% --------------------------------------
 %% @doc supervisor behaviour callback

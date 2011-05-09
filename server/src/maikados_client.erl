@@ -24,13 +24,13 @@
 -behaviour(gen_fsm).
 -export([init/1, handle_event/3, code_change/4, handle_info/3,
     handle_sync_event/4, terminate/3,
-    login/2]).
+    login/2, wait_for_game_start/2, forward_messages/2]).
 
--export([start_link/1, receive_msg/2, stop/1]).
+-export([start_link/1, receive_msg/2, stop/1, send_client_msg/2]).
 
 -include("protocol.hrl").
 
--record(client, {socket}).
+-record(client, {socket, name, game, side}).
 
 %% --------------------------------------
 %% @doc starts gen_fsm
@@ -53,6 +53,13 @@ stop(Pid) ->
 receive_msg(Pid, Msg) ->
     gen_fsm:send_event(Pid, Msg).
 
+%% --------------------------------------
+%% @doc Send message to client (via socket)
+%% @end
+%% --------------------------------------
+send_client_msg(Pid, Msg) ->
+    gen_fsm:send_all_state_event(Pid, {send, Msg}).
+
 %%% ======================================
 %%%     gen_fsm
 %%% ======================================
@@ -60,12 +67,45 @@ receive_msg(Pid, Msg) ->
 init(SocketPid) ->
     {ok, login, #client{socket = SocketPid}}.
 
+login(#clt_login{name = Name}, State) ->
+    error_logger:info_msg("Login try by player ~p~n", [Name]),
+    {NextState, NewState} = case is_valid_nick(Name) of
+        true ->
+            case maikados_players:register_player(Name, self()) of
+                error ->
+                    send_msg(State, #response_code_msg{code = ?RESPONSE_CODE_MSG_Illegal}),
+                    {login, State};
+                ok ->
+                    send_msg(State, #response_code_msg{code = ?RESPONSE_CODE_MSG_OK}),
+                    {wait_for_game_start, State#client{name = Name}}
+            end;
+        false ->
+            send_msg(State, #response_code_msg{code = ?RESPONSE_CODE_MSG_Illegal}),
+            {login, State}
+    end,
+    {next_state, NextState, NewState};
+
 login(Msg, State) ->
-    error_logger:info_msg("Got message: ~p~n", [Msg]),
-    send_msg(State, #srv_response_code{code = 25}),
+    error_logger:info_msg("Got unhandled message in state `login': ~p~n", [Msg]),
     {next_state, login, State}.
 
+wait_for_game_start({game_start, Side, Game}, State) ->
+    {next_state, forward_messages, State#client{game = Game, side = Side}};
+
+wait_for_game_start(Msg, State) ->
+    error_logger:info_msg("Got unhandled message in state `wait_for_game_start': ~p~n", [Msg]),
+    {next_state, wait_for_game_start, State}.
+
+forward_messages(Msg, #client{game = G, side = S} = State) ->
+    maikados_game:msg(G, S, Msg),
+    {next_state, forward_messages, State}.
+
+handle_event({send, Msg}, StateName, State) ->
+    send_msg(State, Msg),
+    {next_state, StateName, State};
+
 handle_event(stop, _StateName, State) ->
+    maikados_players:player_left(State#client.name),
     {stop, normal, State}.
 
 handle_sync_event(_Event, _From, StateName, StateData) ->
@@ -88,5 +128,8 @@ send_msg(#client{socket = Pid}, Msg) -> send_msg(Pid, Msg, is_tuple(Msg)).
 
 send_msg(Pid, Msg, Json) ->
     {ok, Content} = maikados_protocol:record_to_packet(Msg),
-    error_logger:info_msg("Send packet: ~p~n", [Content]),
     socketio_client:send(Pid, #msg{ content = Content, json = Json }).
+
+is_valid_nick(Nick) ->
+    {ok, Pattern} = re:compile("^[- a-z0-9_öäüß@.]{1,15}$", [caseless]),
+    re:run(Nick, Pattern, [{capture, none}]) =:= match.

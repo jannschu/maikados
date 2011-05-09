@@ -27,6 +27,7 @@ class MaikadosGame extends GameState
                 return
             if ClientLoginMsg.isValidNickname nick
                 @nickHandling = handling
+                @ai = ai
                 @setupConnection(if ai then new AIConnectionObject() else new NetConnection())
                 @connection.send new ClientLoginMsg(name: nick)
                 @nick = nick
@@ -93,7 +94,6 @@ class MaikadosGame extends GameState
                         @resumeFSM()
                     {data} = msg
                     @pauseFSM()
-                    @ui.postNotification "Wähle einen Stein aus! (#{data}s)", 'game'
                     @setCountdown data, () =>
                         @ui.postNotification 'Zeit überschritten, zufälliger Stein ausgewählt', 'game'
                         @ui.stop()
@@ -106,13 +106,21 @@ class MaikadosGame extends GameState
                     [piece, fields, time] = data
                     @currentPiece = piece
                     sendSelection = (nr) =>
-                        @connection.send new GameActionMsg(action: GameActionMsg.actions.FieldChosen, data: nr)
-                        (@animateMove piece, nr, () => @resumeFSM()) if nr isnt null
+                        msg = new GameActionMsg(action: GameActionMsg.actions.FieldChosen, data: nr)
+                        if nr isnt null
+                            @connection.send msg unless @ai
+                            (@animateMove piece, nr, () =>
+                                @connection.send msg if @ai
+                                @resumeFSM())
+                        else
+                            @connection.send msg
                     @pauseFSM()
                     if fields.length is 0
                         @ui.postNotification 'Stein blockiert', 'game'
-                        @ui.getUIPiece(piece).animateBlocked(() => @resumeFSM())
-                        sendSelection null
+                        @ui.getUIPiece(piece).animateBlocked(() =>
+                            sendSelection null if @ai
+                            @resumeFSM())
+                        sendSelection null unless @ai
                     else
                         @ui.getMoveDestination piece, fields, (p) =>
                             @stopCountdown()

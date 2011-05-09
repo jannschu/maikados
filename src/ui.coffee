@@ -167,7 +167,7 @@ class UIField
                     event = () ->
                         $('#chooseNickname').attr('disabled', true)
                         nick = $('#nickname').val()
-                        ai = $('#getPlayerName input[name=ai]').val() is 'yes'
+                        ai = $('#getPlayerName input[name=ai]:checked').val() is 'yes'
                         testCallback(nick, ai, (ok: ok, getNew: getNew))
                     $('#chooseNickname').click(event))
             )
@@ -306,7 +306,6 @@ class UIField
                 if status
                     ring.animate 'stroke-opacity': 1, 300
                 else if ring
-                    console.log "delete ring"
                     do (ring, i) =>
                         ring.animate 'stroke-opacity': 0, 300, callback: () =>
                             delete @_highlightRings[i]

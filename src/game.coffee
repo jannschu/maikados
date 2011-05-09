@@ -87,6 +87,9 @@ class MaikadosGame extends GameState
                     @currentPiece = piece
                     @setCountdown time
                     return 'waitForGameAction'
+                when ServerGameControlMsg.codes.LostOpponentConnection
+                    @lostOpponentConnection()
+                    return 'IDLE'
                 when ServerGameControlMsg.codes.ChoosePiece
                     sendSelection = (piece) =>
                         nr = parseInt(piece.split('-')[1])
@@ -147,27 +150,36 @@ class MaikadosGame extends GameState
         'waitForGameControl'
     
     waitForGameAction: (type, msg) ->
-        if type is 'message' and msg instanceof GameActionMsg
-            switch msg.action
-                when GameActionMsg.actions.PieceChosen # TODO
-                    {data} = msg
-                    @ui.postNotification "<em>#{@opponent}</em> hat einen Stein gewählt", 'game'
-                    @setCountdown data
-                    return 'waitForGameAction'
-                when GameActionMsg.actions.FieldChosen
-                    {data} = msg
-                    @pauseFSM()
-                    if data is null
-                        @ui.getUIPiece(@currentPiece).animateBlocked(() => @resumeFSM())
-                    else
-                        @animateMove(@currentPiece, data, () => @resumeFSM())
-                    return 'waitForGameControl'
-        @stopCountdown()
+        if type is 'message'
+            if msg instanceof GameActionMsg
+                switch msg.action
+                    when GameActionMsg.actions.PieceChosen # TODO
+                        {data} = msg
+                        @ui.postNotification "<em>#{@opponent}</em> hat einen Stein gewählt", 'game'
+                        @setCountdown data
+                        return 'waitForGameAction'
+                    when GameActionMsg.actions.FieldChosen
+                        {data} = msg
+                        @pauseFSM()
+                        if data is null
+                            @ui.getUIPiece(@currentPiece).animateBlocked(() => @resumeFSM())
+                        else
+                            @animateMove(@currentPiece, data, () => @resumeFSM())
+                        return 'waitForGameControl'
+            else if msg instanceof ServerGameControlMsg
+                if msg.code is ServerGameControlMsg.codes.LostOpponentConnection
+                    @lostOpponentConnection()
+                    return 'IDLE'
         'waitForGameAction'
     
     ###
     - Helper
     ###
+    
+    lostOpponentConnection: () ->
+        @stopCountdown()
+        @ui.stop()
+        @ui.postNotification "Verbindung zum Gegenspieler verloren", 'warn'
     
     animateMove: (piece, nr, callback) ->
         row = Math.floor(nr / 8)

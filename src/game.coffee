@@ -87,6 +87,10 @@ class MaikadosGame extends GameState
                     @currentPiece = piece
                     @setCountdown time
                     return 'waitForGameAction'
+                when ServerGameControlMsg.codes.LostOpponentConnection
+                    @stopCountdown()
+                    @ui.postNotification "Verbindung zum Gegenspieler verloren", 'warn'
+                    return 'IDLE'
                 when ServerGameControlMsg.codes.ChoosePiece
                     sendSelection = (piece) =>
                         nr = parseInt(piece.split('-')[1])

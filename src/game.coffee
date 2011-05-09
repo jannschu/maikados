@@ -163,6 +163,7 @@ class MaikadosGame extends GameState
                         @setCountdown data
                         return 'waitForGameAction'
                     when GameActionMsg.actions.FieldChosen
+                        @stopCountdown()
                         {data} = msg
                         @pauseFSM()
                         if data is null

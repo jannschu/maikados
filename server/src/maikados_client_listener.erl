@@ -91,7 +91,7 @@ handle_event({disconnect, Client}, State) ->
     {ok, dict:erase(Client, State)};
 
 handle_event(Event, State) ->
-    io:format("EVENT: ~p~n", [Event]),
+    error_logger:info_msg("unhandled EVENT in client_listener: ~p~n", [Event]),
     {ok, State}.
 
 handle_call(Request, State) ->

@@ -73,7 +73,7 @@ ProtocolMessages[0] = class ClientLoginMsg extends ProtocolMessage
 ClientLoginMsg.isValidNickname = (nick) -> (/^[- a-z0-9_öäüß@.]{1,15}$/i).test nick
 
 
-ProtocolMessages[1] = class ResponseCodeMsg extends ProtocolMessages
+ProtocolMessages[1] = class ResponseCodeMsg extends ProtocolMessage
     constructor: ({@code}) ->
 
 ResponseCodeMsg.codes =
@@ -85,11 +85,11 @@ ResponseCodeMsg.codes =
     Right: 5
 
 
-ProtocolMessages[2] = class ServerGameStartMsg extends ProtocolMessages
+ProtocolMessages[2] = class ServerGameStartMsg extends ProtocolMessage
     constructor: ({@opponent, @side, @pieces}) ->
 
 
-ProtocolMessages[3] = class ServerGameControlMsg extends ProtocolMessages
+ProtocolMessages[3] = class ServerGameControlMsg extends ProtocolMessage
     constructor: ({@code, @data}) ->
 
 ServerGameControlMsg.codes =
@@ -103,7 +103,7 @@ ServerGameControlMsg.codes =
     NextMode: 7
 
 
-ProtocolMessages[4] = class GameActionMsg extends ProtocolMessages
+ProtocolMessages[4] = class GameActionMsg extends ProtocolMessage
     constructor: ({@action, @data}) ->
 
 GameActionMsg.actions =

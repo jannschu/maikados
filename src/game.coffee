@@ -82,18 +82,22 @@ class MaikadosGame extends GameState
         if type is 'message' and msg instanceof ServerGameControlMsg
             switch msg.code
                 when ServerGameControlMsg.codes.WaitForOpponent
+                    @stopCountdown
                     {data} = msg
                     [time, piece] = data
-                    @currentPiece = piece
                     @setCountdown time
-                    return 'waitForGameAction'
+                    if piece isnt null
+                        @currentPiece = piece
+                        return 'waitForGameAction'
+                    else
+                        return 'waitForGameControl' # player chose piece
                 when ServerGameControlMsg.codes.LostOpponentConnection
                     @lostOpponentConnection()
                     return 'IDLE'
                 when ServerGameControlMsg.codes.ChoosePiece
                     sendSelection = (piece) =>
                         nr = parseInt(piece.split('-')[1])
-                        @connection.send new GameActionMsg(action: GameActionMsg.actions.PieceChosen, data: nr)                    
+                        @connection.send new GameActionMsg(action: GameActionMsg.actions.PieceChosen, data: nr)
                         @resumeFSM()
                     {data} = msg
                     @pauseFSM()

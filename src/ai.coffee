@@ -128,9 +128,9 @@ class AIGameLogic extends GameState
                 else # ai has to move
                     @connection.sendToClient new ServerGameControlMsg(code: ServerGameControlMsg.codes.WaitForOpponent, data: [timeForMove, @piece])
                     @pauseFSM()
-                    aiMove = @aiPlayer.getMove @field.getGamingPiece(@piece), @field, (m) =>
+                    window.setTimeout (() => @aiPlayer.getMove @field.getGamingPiece(@piece), @field, (m) =>
                         @sendEvent 'message', new GameActionMsg(action: msg.action, data: m)
-                        @resumeFSM()
+                        @resumeFSM()), 2500
             return 'waitForFieldChosen'
         'waitForFieldChosen'
     

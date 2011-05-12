@@ -136,12 +136,6 @@ class MaikadosGame extends GameState
                             @ui.postNotification 'Zeit überschritten, zufälliger Zug ausgewählt', 'game'
                             @ui.stop()
                             sendSelection fields[Math.round Math.random() * (fields.length - 1)]
-                when ServerGameControlMsg.codes.AddDragonTooth
-                    {data} = msg
-                    [piece, val] = data
-                    @pauseFSM()
-                    @field.getGamingPiece(piece).setDragonTeeth(val)
-                    @ui.update () => @resumeFSM()
                 when ServerGameControlMsg.codes.YouLost
                     @ui.gameEndedNotice 'lost'
                     @stopCountdown()

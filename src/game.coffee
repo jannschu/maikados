@@ -188,7 +188,7 @@ class MaikadosGame extends GameState
             gp.setDragonTeeth(gp.getDragonTeeth() + 1)
             @ui.setGameInformation 'update'
         if gp.getCol() is col and @field.pieceOnField(nr) isnt null
-            kickedPieces = field.getKickedPieces(nr)
+            kickedPieces = @field.getKickedPieces(nr)
         else
             kickedPieces = []
         if kickedPieces.length isnt 0

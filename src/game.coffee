@@ -72,8 +72,8 @@ class MaikadosGame extends GameState
             @ui.update()
             @ui.postNotification "Das Spiel beginnt, du spielst gegen <em>#{opponent}</em>"
             infos = {}
-            infos["player#{1 - side}Name"] = opponent
-            infos["player#{side}Name"] = @nick
+            infos["player#{1 - @side}Name"] = opponent
+            infos["player#{@side}Name"] = @nick
             @ui.setGameInformation(infos)
             return 'waitForGameControl'
         'waitForGameStart'

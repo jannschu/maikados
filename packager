@@ -12,9 +12,13 @@ puts "Build..."
 puts "Create directories & copy binary files..."
 `mkdir -p maikados/resources`
 `mkdir -p maikados/lib/fancybox`
+`mkdir -p maikados/lib/jnotify`
 `cp resources/* maikados/resources`
 `cp lib/fancybox/*.png maikados/lib/fancybox`
 `cp lib/fancybox/*.gif maikados/lib/fancybox`
+`cp lib/fancybox/*.css maikados/lib/fancybox`
+`cp lib/jnotify/*.css maikados/lib/jnotify`
+
 
 puts "Read index.html & get scripts and styles..."
 index = File.read 'index.html'

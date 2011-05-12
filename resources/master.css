@@ -28,6 +28,7 @@ body {
   color: #131B2F;
   font-size: 0.9em;
   background-image:url("sakura-bg.jpg");
+  background-position:top left;
   background-repeat:no-repeat;
 }
 

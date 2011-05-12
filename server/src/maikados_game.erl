@@ -124,7 +124,9 @@ wait_for_game_action(Any, State) ->
     {next_state, wait_for_game_action, State}.
 
 handle_event({player_left, _Name}, _StateName, State) ->
-    % TODO
+    Msg = #srv_game_ctrl_msg{code = ?SRV_GAME_CTRL_MSG_LostOpponentConnection},
+    catch(maikados_client:send_client_msg(State#state.pid0, Msg)),
+    catch(maikados_client:send_client_msg(State#state.pid1, Msg)),
     {stop, normal, State};
 
 handle_event(stop, _StateName, State) ->

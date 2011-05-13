@@ -240,6 +240,14 @@ class UIField
         @_highlightFields list
         @_highlightFields validFields, true
     
+    setStatus: (text) ->
+        unless text
+            $('#status').hide()
+        else
+            $('#status').show().text(text)
+    
+    setGetNickNameActive: (val) -> $('#startButton')[if val then 'show' else 'hide']()
+    
     setGameInformation: (info) ->
         updatePoints = () =>
             max = @gameField.getWinPoints()

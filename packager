@@ -37,7 +37,7 @@ index.sub!(/(<head>.*?)\s*<\/head>/m) do
   '</head>'
 end
 
-index.gsub!(/(\s{2,})|(<!--(?!if).*?-->)/m, '')
+index.gsub!(/(\s{2,})|(<!--(?!if).*?-->)/m, ' ')
 
 File.open('maikados/index.html', 'w') { |f| f.write index }
 `zip -9 -r maikados.zip maikados`

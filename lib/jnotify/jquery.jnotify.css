@@ -19,7 +19,7 @@
 	position: absolute; 
 	top: 0; 
 	left: 0; 
-	width: 100%; 
+	width: 100%;
 	height: 100%;
 	background-color: #7E7E7E; 
 	filter: alpha(opacity=90); 
@@ -32,6 +32,8 @@
 	-webkit-border-radius: 7px;
 	border-radius: 7px;
 }
+
+.jnotify-container { height: auto; }
 
 .jnotify-container .jnotify-notification a.jnotify-close,
 .jnotify-container .jnotify-notification a.jnotify-close:link,

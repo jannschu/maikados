@@ -29,7 +29,7 @@
 
 -record(srv_game_start_msg, {opponent, side, pieces}). % 2
 
--record(srv_game_ctrl_msg, {code, data}). % 3
+-record(srv_game_ctrl_msg, {code, data = null}). % 3
 -define(SRV_GAME_CTRL_MSG_WaitForOpponent, 0).
 -define(SRV_GAME_CTRL_MSG_LostOpponentConnection, 1).
 -define(SRV_GAME_CTRL_MSG_ChoosePiece, 2).
@@ -39,7 +39,7 @@
 -define(SRV_GAME_CTRL_MSG_NextModeQuestion, 6).
 -define(SRV_GAME_CTRL_MSG_NextMode, 7).
 
--record(game_action_msg, {action, data}). % 4
+-record(game_action_msg, {action, data = null}). % 4
 -define(GAME_ACTION_MSG_PieceChosen, 0).
 -define(GAME_ACTION_MSG_FieldChosen, 1).
 

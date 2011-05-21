@@ -55,6 +55,8 @@ class MaikadosGame extends GameState
                 @nickHandling.ok()
                 @loggedIn = true
                 delete @nickHandling
+                @ui.setStatus 'Auf Gegenspieler warten…'
+                @ui.setGetNickNameActive false
                 return 'waitForGameStart'
             else
                 @nickHandling.getNew 'Dieser Nick ist vergeben'
@@ -72,8 +74,8 @@ class MaikadosGame extends GameState
             @ui.update()
             @ui.postNotification "Das Spiel beginnt, du spielst gegen <em>#{opponent}</em>"
             infos = {}
-            infos["player#{1 - side}Name"] = opponent
-            infos["player#{side}Name"] = @nick
+            infos["player#{1 - @side}Name"] = opponent
+            infos["player#{@side}Name"] = @nick
             @ui.setGameInformation(infos)
             return 'waitForGameControl'
         'waitForGameStart'
@@ -86,6 +88,7 @@ class MaikadosGame extends GameState
                     {data} = msg
                     [time, piece] = data
                     @setCountdown time
+                    @ui.setStatus "#{@opponent} is dran…"
                     if piece isnt null
                         @currentPiece = piece
                         return 'waitForGameAction'
@@ -95,6 +98,7 @@ class MaikadosGame extends GameState
                     @lostOpponentConnection()
                     return 'IDLE'
                 when ServerGameControlMsg.codes.ChoosePiece
+                    @ui.setStatus "Stein auswählen bitte…"
                     sendSelection = (piece) =>
                         nr = parseInt(piece.split('-')[1])
                         @connection.send new GameActionMsg(action: GameActionMsg.actions.PieceChosen, data: nr)
@@ -123,12 +127,14 @@ class MaikadosGame extends GameState
                             @connection.send msg
                     @pauseFSM()
                     if fields.length is 0
+                        @ui.setStatus "Feld auswählen bitte…blockiert"
                         @ui.postNotification 'Stein blockiert', 'game'
                         @ui.getUIPiece(piece).animateBlocked(() =>
                             sendSelection null if @ai
                             @resumeFSM())
                         sendSelection null unless @ai
                     else
+                        @ui.setStatus "Feld auswählen bitte…"
                         @ui.getMoveDestination piece, fields, (p) =>
                             @stopCountdown()
                             sendSelection p
@@ -136,17 +142,13 @@ class MaikadosGame extends GameState
                             @ui.postNotification 'Zeit überschritten, zufälliger Zug ausgewählt', 'game'
                             @ui.stop()
                             sendSelection fields[Math.round Math.random() * (fields.length - 1)]
-                when ServerGameControlMsg.codes.AddDragonTooth
-                    {data} = msg
-                    [piece, val] = data
-                    @pauseFSM()
-                    @field.getGamingPiece(piece).setDragonTeeth(val)
-                    @ui.update () => @resumeFSM()
                 when ServerGameControlMsg.codes.YouLost
+                    @ui.setStatus "Verloren"
                     @ui.gameEndedNotice 'lost'
                     @stopCountdown()
                     return 'IDLE'
                 when ServerGameControlMsg.codes.YouWin
+                    @ui.setStatus "Gewonnen"
                     @ui.gameEndedNotice 'won'
                     @stopCountdown()
                     return 'IDLE'
@@ -177,6 +179,12 @@ class MaikadosGame extends GameState
                     return 'IDLE'
         'waitForGameAction'
     
+    IDLE = (type, msg) ->
+        if type is 'message' and msg instanceof ServerGameControlMsg
+            if msg.code is ServerGameControlMsg.codes.LostOpponentConnection
+                    @lostOpponentConnection()
+        super()
+    
     ###
     - Helper
     ###
@@ -184,6 +192,7 @@ class MaikadosGame extends GameState
     lostOpponentConnection: () ->
         @stopCountdown()
         @ui.stop()
+        @ui.setStatus "Verbindung zum Gegner verloren"
         @ui.postNotification "Verbindung zum Gegenspieler verloren", 'warn'
     
     animateMove: (piece, nr, callback) ->
@@ -194,7 +203,7 @@ class MaikadosGame extends GameState
             gp.setDragonTeeth(gp.getDragonTeeth() + 1)
             @ui.setGameInformation 'update'
         if gp.getCol() is col and @field.pieceOnField(nr) isnt null
-            kickedPieces = field.getKickedPieces(nr)
+            kickedPieces = @field.getKickedPieces(nr)
         else
             kickedPieces = []
         if kickedPieces.length isnt 0

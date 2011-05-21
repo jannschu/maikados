@@ -153,6 +153,12 @@ class AIPlayer
     
     constructor: () ->
         @name = 'Larry II.'
+        
+        @maxDepth = 6 # maximum depth of tree stuff
+        @allFields = [] # potential fields, that is
+        @iterIndices = [0] # indices of the currently selected potential fields of individual depth layers
+        @depthIndex = 0 # index of the current depth layer
+        @bestMove = null # {score: x, move: y)
     
     getName: () -> @name
     
@@ -168,20 +174,142 @@ class AIPlayer
         # Answer: Execution is single-threaded and we don't want to
         #         block animations etc. ( = everything else).
         #         So split the calculation up.
-        calc = () =>
-            # TODO!!!1!elf!: find the move a bit
-            moves = field.getAllowedMovesFor(piece.getID())
-            moveFound = true
-            if moves.length is 0
-                move = null
+        depthIndex = @depthIndex
+        maxDepth = @maxDepth
+        #console.debug("getmove")
+        calcRecursively = (curPiece, curField, depth) ->
+            depthIndex++
+            depth++
+            
+            moves = curField.getAllowedMovesFor(curPiece.getID())
+            bestMove = null
+            worstMove = null
+            totalScore = 0
+            totalN = 0
+            if moves.length == 0
+                bestMove = {score: -5000, at_depth: depth-1, move: null} # TODO: calculate stuff correctly, while we're at it (depth factor)
+                worstMove = {score: -50000, at_depth: depth-1, move: null}
+                totalScore -= 2500
+                totalN++
+                if depth == 1
+                    depthIndex--
+                    depth--
+                    return {best: bestMove, worst: worstMove, total: totalScore}
+                #console.debug("block")
+                if curPiece.getID()[0] == "1" # white blocked, neat-o
+                    bestMove.score = 200
+                    worstMove.score = 10 # TODO: calculate moves for the other side, then
+                    totalScore += 2501
+                if depth < maxDepth
+                    # prepare for next turn-thingy
+                    newField = owl.deepCopy(curField)
+                    curPiece = newField.getGamingPiece(curPiece.getID())
+                    newPieceID = curPiece.getID()[0]
+                    # get tha new colah
+                    newPieceID += ("-" + UI.fieldRows[curPiece.getRow()][curPiece.getCol()])
+                    result = calcRecursively(newField.getGamingPiece(newPieceID), newField)
+                    if result.worst.score + result.best.score > bestMove.score + worstMove.score
+                        bestMove = result.best
+                        bestMove.move = candidate
+                    if result.worst.score + result.best.score < bestMove.score + worstMove.score
+                        worstMove = result.worst
+                        worstMove.move = candidate
+                    totalScore += result.total
+                    totalN++
             else
-                # Use winning move if possible
-                for potentialMove in moves
-                    if (potentialMove - 55) >= 1
-                        move = potentialMove
-                # if all else fails...
-                if not move
-                    move = moves[Math.round(Math.random() * (moves.length - 1))]
+                # for a start, check if there is a winning move up in this %&!$
+                bestMove = {score: 0, at_depth: depth-1, move: moves[0]}
+                worstMove = {score: 0, at_depth: depth-1, move: moves[0]}
+                #console.debug(curPiece.getID())
+                calcCandidates = [] # candidates to be used in the next calculation
+                isWinOrLose = false
+                nSinceLoopStart = 0
+                nFails = 0
+                for candidate in moves
+                    isWinOrLose = false
+                    totalN++
+                    nSinceLoopStart++
+                    if curField.getGamingPiece(curPiece.getID()).getSide() == 0 && (candidate - 55) >= 1
+                        # epic win
+                        bestMove = {score: bestMove.score+(50*(maxDepth-depth)), at_depth: depth, move: candidate}
+                        totalScore += 2600
+                        if depth == 1
+                            depthIndex--
+                            depth--
+                            return {best: bestMove, worst: worstMove, total: 100000000} # instawin
+                        isWinOrLose = true
+                        return {best: bestMove, worst: worstMove, total: totalScore}
+                    if curField.getGamingPiece(curPiece.getID()).getSide() == 1 && candidate <= 7
+                        # epic fail
+                        totalN -= nSinceLoopStart
+                        nSinceLoopStart = 1
+                        nFails++
+                        worstMove = {score: worstMove.score-(10000)*(maxDepth-depth), at_depth: depth, move: candidate}
+                        totalScore -= 5000
+                        #console.log("lose")
+                        if depth == 2
+                            #console.log("losedepth<2")
+                            bestMove = {score: -30000000, at_depth: depth, move: candidate}
+                            #alert("d:" + depth + "; cP:" + curPiece.getID() + "; tar:" + candidate)
+                            worstMove.score = bestMove.score
+                            depthIndex--
+                            depth--
+                            return {best: bestMove, worst: worstMove, total: -9999999999999}
+                        isWinOrLose = true
+                        return {best: bestMove, worst: worstMove, total: totalScore}
+                    if not isWinOrLose
+                        calcCandidates.push(candidate)
+                
+                # if not, then continue building the tree as long as the maximum depth has not been reached
+                #bestMove = {score: 0, at_depth: depthIndex-1, move: moves[0]}
+                #worstMove = {score: 0, at_depth: depthIndex-1, move: moves[0]}
+                if depth < maxDepth
+                    bestMoveThisRound = {score: 0, at_depth: depth, move: moves[0]}
+                    worstMoveThisRound = {score: 0, at_depth: depth, move: moves[0]}
+                    bestTotalThisRound = {move: moves[0], total: -9999999999999}
+                    for candidate in calcCandidates
+                        newField = owl.deepCopy(curField)
+                        curPiece = newField.getGamingPiece(curPiece.getID())
+                        
+                        newField.doMove(curPiece.getID(), candidate)
+                        #console.debug("curp")
+                        #console.debug(curPiece.getID())
+                        newPieceID = null
+                        if not (bestMove.move == null) # not blocked
+                            if curPiece.getID()[0] == "1"
+                                newPieceID = "0"
+                            else
+                                newPieceID = "1"
+                        else
+                            newPieceID = curPiece.getID()[0]
+                            #console.debug("newp")
+                            #console.debug(newPieceID)
+                        # get tha new colah
+                        newPieceID += ("-" + UI.fieldRows[curPiece.getRow()][curPiece.getCol()])
+                        #console.debug(newPieceID)
+                        result = calcRecursively(newField.getGamingPiece(newPieceID), newField, depth)
+  
+                        if depth == 0
+                            alert("this must not happen")
+                        if depth == 1
+                            console.log(bestTotalThisRound.total)
+                            console.log(result.total)
+                        if result.total > bestTotalThisRound.total
+                            bestTotalThisRound.move = result.best.move
+                            bestTotalThisRound.total = result.total
+                            bestMove = result.best
+                            bestMove.move = candidate
+                        totalScore += result.total
+                        totalN++
+            #console.debug(depth)
+            depthIndex--
+            depth--
+            bestMove.score += worstMove.score
+            return {best: bestMove, worst: worstMove, total: totalScore/totalN}
+        
+        calc = () =>
+            moveResult = calcRecursively(piece, field, 0)
+            moveFound = true
             
             if moveFound
                 # ´move' should be a field number. Field:
@@ -193,7 +321,15 @@ class AIPlayer
                 #         40 41 42 43 44 45 46 47
                 #         48 49 50 51 52 53 54 55
                 #         56 57 58 59 60 61 62 63 (white from here)
-                window.setTimeout (() -> callback(move))
+                console.debug("foo")
+                console.debug(moveResult)
+                console.debug("total")
+                console.debug(moveResult.total)
+                #alert(moveResult.best.score)
+                #alert(moveResult.worst.score)
+                if moveResult.best.move == moveResult.worst.move
+                    alert("shit")
+                window.setTimeout (() -> callback(moveResult.best.move))
             else
                 window.setTimeout (() -> calc()), 0
         window.setTimeout (() -> calc()), 0

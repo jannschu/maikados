@@ -101,6 +101,20 @@ class GameField
         
         return fields
     
+    doMove: (pieceID, targetField) ->
+        @pieces[pieceID].setCol(targetField % 8)
+        @pieces[pieceID].setRow((targetField-(targetField % 8))/8)
+        switch @pieces[pieceID].getSide()
+            when 0
+                if @pieces[pieceID].getRow() == 7
+                    @pieces[pieceID].setDragonTeeth(@pieces[pieceID].getDragonTeeth()+1)
+                    return true
+            when 1
+                if @pieces[pieceID].getRow() == 0
+                    @pieces[pieceID].setDragonTeeth(@pieces[pieceID].getDragonTeeth()+1)
+                    return true
+        return false
+    
     pieceOnField: (nr) ->
         for id, p of @pieces
             return p if (p.getRow() * 8 + p.getCol()) is nr

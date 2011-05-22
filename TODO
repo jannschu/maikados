@@ -4,19 +4,12 @@ Client
 HINWEIS: Beim Benutzen von Plugins immer schauen ob es (Github) Git-Repo gibt
             -> git submodule add <URI>
 
-Siehe:
-  http://jashkenas.github.com/coffee-script/ (Script-Sprache)
-  http://raphaeljs.com/reference.html (SVG lib)
-  http://socket.io
-
 UI
 --
 
 * Swap mode komplett implementieren (Spieler Schwarz bekommt Spielfeld gedreht)
   + beim Einfügen/Updaten der Spielsteine umrechnen
   + beim Einlesen von Spielzügen umrechnen
-
-* Statustext für was gerade geschieht
 
 * Schriftzeichen einfügen
 
@@ -33,6 +26,8 @@ Spielablauf
 ------------------
 
 * Alle Spielmodi implementieren
+
+* Handling von Disconnects / Verbinndung allgemein verbessern bzw. überarbeiten
 
 Server
 ------

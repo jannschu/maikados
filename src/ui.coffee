@@ -223,10 +223,10 @@ class UIField
                 transitionOut: 'none',
                 'onStart': (() ->
                     ok = () ->
-                        $('#chooseNickname').attr('disabled', false)
+                        $('#chooseNickname').prop('disabled', false)
                         $.fancybox.close()
                     getNew = (errorMsg) ->
-                        $('#chooseNickname').attr('disabled', false)
+                        $('#chooseNickname').prop('disabled', false)
                         error = $('#nicknameErrorMsg')
                         $('span.msg', error).text(errorMsg)
                         if error.is(':hidden')
@@ -234,7 +234,7 @@ class UIField
                         else
                             error.effect('highlight', (color: '#FCD9DA'), 2000)
                     event = () ->
-                        $('#chooseNickname').attr('disabled', true)
+                        $('#chooseNickname').prop('disabled', true)
                         nick = $('#nickname').val()
                         ai = $('#getPlayerName input[name=ai]:checked').val() is 'yes'
                         testCallback(nick, ai, (ok: ok, getNew: getNew))

@@ -111,6 +111,18 @@ GameActionMsg.actions =
     FieldChosen: 1
 
 
+ProtocolMessages[5] = class LobbySetPlayerMsg extends ProtocolMessages
+    constructor: (@list) ->
+
+ProtocolMessages[6] = class LobbyPlayerLeftMsg extends ProtocolMessages
+    constructor: (@name) ->
+
+ProtocolMessages[7] = class LobbyChallengePlayerMsg extends ProtocolMessages
+    constructor: (@name) ->
+
+ProtocolMessages[8] = class LobbyAcceptChallengeMsg extends ProtocolMessages
+    constructor: (@name) ->
+
 for cmdNr, msg of ProtocolMessages
     msg::.__cmd = parseInt(cmdNr)
      

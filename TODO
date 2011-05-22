@@ -11,8 +11,6 @@ UI
   + beim Einfügen/Updaten der Spielsteine umrechnen
   + beim Einlesen von Spielzügen umrechnen
 
-* Schriftzeichen einfügen
-
 * Neues Match ohne Seite neuladen (s. Server -> Lobby)
 
 * Animation

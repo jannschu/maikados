@@ -67,6 +67,13 @@ a:hover { color: #FFC699; }
   width: 45%;
   vertical-align: top;
 }
+
+#game #signs {
+    position: absolute;
+    left: -70px;
+    top: 0;
+}
+
 #gameInformation {
     text-align: center;
     color: #CB0B18;

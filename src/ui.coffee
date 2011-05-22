@@ -76,6 +76,75 @@ class UIField
         @loading = off
         @stoppers = {}
     
+    setLobby: (users, mode = 'set') ->
+        @lobbyUsers ?= {}
+        unless @callbacks
+            f = () ->
+            @lobbyCallbacks ?= (onRequestChallenge: f, onStartChallenge: f)
+        
+        lobby = $('#lobby').show()
+        if mode is 'del'
+            for name in users
+                continue unless button = @lobbyUsers[name]
+                $('a', button).unbind('click')
+                delete @lobbyUsers[name]
+                button.parent().slideUp(1000, () =>
+                    button.parent().remove())
+            length = 0
+            for _, _ of @lobbyUsers
+                ++length
+            if length is 0
+                $("ul", lobby).append('<li class="empty">Lobby leer… *hust*</li>')
+        else if users.length isnt 0
+            if @lobbyUsers.length is 0 and mode is 'set'
+                @_emptyLobby()
+            createButton = (name, status) =>
+                span = (s) -> "<span class=\"buttons\">#{s}</span>"
+                elem = switch status
+                    when 'asksMe'
+                        $(span '<a href="#">Spiel starten</a>').bind 'click', () =>
+                            @lobbyCallbacks.onStartChallenge(name)
+                            false
+                    when 'askPlayer'
+                        $(span '<a href="#">Herausfordern</a>').bind 'click', () =>
+                            @lobbyCallbacks.onRequestChallenge(name)
+                            false
+                    when 'waitForAnswer' then $('<span class="buttons">Warte auf Antwort…</span>')
+                elem.status = status
+                return elem
+            for {name, status}, pos in users
+                buttons = @lobbyUsers[name]
+                if buttons
+                    continue if buttons.status == status
+                    $("a", buttons).unbind 'click'
+                    newButtons = createButton(name, status)
+                    buttons.replaceWith(newButtons)
+                    buttons = newButtons
+                else
+                    buttons = createButton(name, status)
+                    li = $('<li><span class="name">' + name + '</span></li>').append(buttons).hide()
+                    $('ul', lobby).append(li)
+                do (li) ->
+                    li.slideDown(1000, () -> li.effect('highlight', 1000))
+                @lobbyUsers[name] = buttons
+        else if mode is 'set'
+            @lobbyUsers = {}
+            @_emptyLobby()
+            $("ul", lobby).append('<li class="empty">Lobby leer… *hust*</li>')
+        
+        @lobbyCallbacks
+    
+    clearLobby: () ->
+        delete @lobbyUsers
+        delete @lobbyCallbacks
+        $("#lobby").hide()
+        @_emptyLobby()
+    
+    _emptyLobby: () ->
+        lobby = $("#lobby")
+        $("a", lobby).unbind('click')
+        $("li", lobby).remove()
+    
     getFieldSize: () ->
         @fieldSize
     

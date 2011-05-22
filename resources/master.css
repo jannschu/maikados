@@ -108,6 +108,33 @@ a:hover { color: #FFC699; }
 
 #startButton { display: block; margin: auto; }
 
+#lobby { display: none; }
+
+#lobby ul {
+    list-style-type: none;
+    padding-left: 0;
+    border: 1px dashed #004403;
+    max-height: 400px;
+    overflow: auto;
+    margin: 1em auto;
+}
+
+#lobby ul li {
+    padding: 0.5em;
+    line-height: 16px;
+    margin: 2px;
+}
+
+#lobby ul li .buttons { float: right; }
+#lobby ul li.empty {
+    background: transparent !important;
+    font-style: italic;
+    font-size: 0.8em;
+    text-align: center;
+}
+#lobby ul li:nth-child(even) { background: #DCDCDC; }
+#lobby ul li:nth-child(odd) { background: #EDEDED; }
+
 footer {
   font-size: 0.6em;
   color: #808080;

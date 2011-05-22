@@ -149,12 +149,14 @@ footer span.email {
 footer span.email:before { content: "<"; }
 footer span.email:after { content: ">"; }
 
-footer a {
+footer a#fsf-logo {
   display: block;
   margin: 0.5em;
   text-align: center;
   opacity: 0.3;
 }
+
+footer a { color: #7E4301; }
 
 #fancybox-content {
     color: black;

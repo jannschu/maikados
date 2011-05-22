@@ -43,12 +43,17 @@ task 'build', 'Build single application file from source files', ->
             throw err if err
             exec "coffee --compile resources/#{appName}.coffee", (err, stdout, stderr) ->
                 throw err if err
-                console.log stdout + stderr
+                console.log stdout + stderr if stdout or stderr
                 fs.unlink "resources/#{appName}.coffee", (err) ->
                     throw err if err
-                    console.log 'Building done.'
+                    getTime = () ->
+                        date = new Date()
+                        fill = (m) -> if (s = date['get' + m]()).length is 1 then "0"+ s else String(s)
+                        "#{fill 'Hours'}:#{fill 'Minutes'}:#{fill 'Seconds'}"
+                    console.log "\033[34m[#{getTime()}]\033[00m \033[1mBuild done\033[00m"
 
 task 'autobuild', 'Watches for file changes and runs the build task', ->
+    invoke 'build'
     for file in appFiles
         fs.watchFile "src/#{file}.coffee", interval: 1, (curr, prev) ->
             unless curr.mtime.valueOf() is prev.mtime.valueOf()

@@ -54,6 +54,7 @@ class NetConnection
     
     send: (aMsgObj) ->
         @socket.send aMsgObj.toJSONObject()
+    
 
 class ProtocolMessage
 
@@ -63,12 +64,17 @@ class ProtocolMessage
             if @hasOwnProperty(name) and name.toString()[0] isnt '_'
                 obj[name] = value
         obj
-
+    
+    encode: (str) ->
+        if /%[A-Za-z0-9]{2}/.test str
+            decodeURIComponent(str)
+        else
+            encodeURIComponent(str)
 
 ProtocolMessages = {}
 
 ProtocolMessages[0] = class ClientLoginMsg extends ProtocolMessage
-    constructor: ({@name}) ->
+    constructor: ({name: name}) -> @name = @encode(name)
 
 ClientLoginMsg.isValidNickname = (nick) -> (/^[- a-z0-9_öäüß@.]{1,15}$/i).test nick
 
@@ -86,7 +92,7 @@ ResponseCodeMsg.codes =
 
 
 ProtocolMessages[2] = class ServerGameStartMsg extends ProtocolMessage
-    constructor: ({@opponent, @side, @pieces}) ->
+    constructor: ({opponent: opp, @side, @pieces}) -> @opponent = @encode(opp)
 
 
 ProtocolMessages[3] = class ServerGameControlMsg extends ProtocolMessage
@@ -112,16 +118,16 @@ GameActionMsg.actions =
 
 
 ProtocolMessages[5] = class LobbySetPlayerMsg extends ProtocolMessages
-    constructor: ({@list}) ->
+    constructor: ({list: list}) -> @list = (@encode name for name in list)
 
 ProtocolMessages[6] = class LobbyPlayerLeftMsg extends ProtocolMessages
-    constructor: ({@name}) ->
+    constructor: ({name: name}) -> @name = @encode(name)
 
 ProtocolMessages[7] = class LobbyChallengePlayerMsg extends ProtocolMessages
-    constructor: ({@name}) ->
+    constructor: ({name: name}) -> @name = @encode(name)
 
 ProtocolMessages[8] = class LobbyAcceptChallengeMsg extends ProtocolMessages
-    constructor: ({@name}) ->
+    constructor: ({name: name}) -> @name = @encode(name)
 
 for cmdNr, msg of ProtocolMessages
     msg::.__cmd = parseInt(cmdNr)

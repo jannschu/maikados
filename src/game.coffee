@@ -207,7 +207,7 @@ class MaikadosGame extends GameState
     setupLobby: () ->
         @ui.setStatus 'Lobby'
         @ui.setGameInformation(null)
-        callback = @ui.setLobby([])
+        callback = @ui.setLobby([], 'init')
         callback.onRequestChallenge = (name) => @connection.send new LobbyChallengePlayerMsg(name: name)
         callback.onStartChallenge = (name) => @connection.send new LobbyAcceptChallengeMsg(name: name)
         return this

@@ -89,6 +89,8 @@ class UIField
             @lobbyCallbacks ?= (onRequestChallenge: f, onStartChallenge: f)
         
         lobby = $('#lobby').show()
+        if mode is 'init' and users.length is 0
+            $("ul", lobby).append('<li class="empty">Lobby leer… *hust*</li>')
         if mode is 'del'
             for name in users
                 continue unless button = @lobbyUsers[name]

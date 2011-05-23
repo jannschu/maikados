@@ -59,6 +59,7 @@ task 'autobuild', 'Watches for file changes and runs the build task', ->
     build = () ->
         exec 'cake build', (err, stdout, stderr) ->
             console.log (stdout + stderr).trim() if stdout or stderr
+            console.log() if stderr
     build()
     for file in appFiles
         fs.watchFile "src/#{file}.coffee", interval: 1, (curr, prev) ->

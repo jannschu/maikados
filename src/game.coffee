@@ -57,13 +57,18 @@ class MaikadosGame extends GameState
                 delete @nickHandling
                 @ui.setStatus 'Auf Gegenspieler warten…'
                 @ui.setGetNickNameActive false
+                unless @ai
+                    @setupLobby()
                 return 'waitForGameStart'
             else
                 @nickHandling.getNew 'Dieser Nick ist vergeben'
         'waitForNickResponse'
     
     waitForGameStart: (type, msg) ->
-        if type is 'message' and msg instanceof ServerGameStartMsg
+        return 'waitForGameStart' if type isnt 'message'
+        if msg instanceof ServerGameStartMsg
+            @ui.clearLobby()
+            @ui.clearField()
             {opponent, side, pieces} = msg
             @opponent = opponent
             @side = side
@@ -77,8 +82,21 @@ class MaikadosGame extends GameState
             infos["player#{1 - @side}Name"] = opponent
             infos["player#{@side}Name"] = @nick
             @ui.setGameInformation(infos)
-            return 'waitForGameControl'
-        'waitForGameStart'
+            'waitForGameControl'
+        else if msg instanceof LobbySetPlayerMsg
+            {list} = msg
+            @ui.setLobby ({name: name, status: 'askPlayer'} for name in list)
+            'waitForGameStart'
+        else if msg instanceof LobbyPlayerLeftMsg
+            {name} = msg
+            @ui.setLobby [name], 'del'
+            'waitForGameStart'
+        else if msg instanceof LobbyChallengePlayerMsg
+            {name} = msg
+            @ui.setLobby [{name: name, status: 'asksMe'}]
+            'waitForGameStart'
+        else
+            'waitForGameStart'
     
     waitForGameControl: (type, msg) ->
         if type is 'message' and msg instanceof ServerGameControlMsg
@@ -96,7 +114,8 @@ class MaikadosGame extends GameState
                         return 'waitForGameControl' # player chose piece
                 when ServerGameControlMsg.codes.LostOpponentConnection
                     @lostOpponentConnection()
-                    return 'IDLE'
+                    @setupLobby()
+                    return 'waitForGameStart'
                 when ServerGameControlMsg.codes.ChoosePiece
                     @ui.setStatus "Stein auswählen bitte…"
                     sendSelection = (piece) =>
@@ -146,12 +165,13 @@ class MaikadosGame extends GameState
                     @ui.setStatus "Verloren"
                     @ui.gameEndedNotice 'lost'
                     @stopCountdown()
-                    return 'IDLE'
+                    @setupLobby()
+                    return 'waitForGameStart'
                 when ServerGameControlMsg.codes.YouWin
                     @ui.setStatus "Gewonnen"
                     @ui.gameEndedNotice 'won'
-                    @stopCountdown()
-                    return 'IDLE'
+                    @setupLobby()
+                    return 'waitForGameStart'
                 # TODO: implement others
         'waitForGameControl'
     
@@ -176,18 +196,21 @@ class MaikadosGame extends GameState
             else if msg instanceof ServerGameControlMsg
                 if msg.code is ServerGameControlMsg.codes.LostOpponentConnection
                     @lostOpponentConnection()
-                    return 'IDLE'
+                    @setupLobby()
+                    return 'waitForGameStart'
         'waitForGameAction'
-    
-    IDLE = (type, msg) ->
-        if type is 'message' and msg instanceof ServerGameControlMsg
-            if msg.code is ServerGameControlMsg.codes.LostOpponentConnection
-                    @lostOpponentConnection()
-        super()
     
     ###
     - Helper
     ###
+    
+    setupLobby: () ->
+        @ui.setStatus 'Lobby'
+        @ui.setGameInformation(null)
+        callback = @ui.setLobby([])
+        callback.onRequestChallenge = (name) => @connection.send new LobbyChallengePlayerMsg(name: name)
+        callback.onStartChallenge = (name) => @connection.send new LobbyAcceptChallengeMsg(name: name)
+        return this
     
     lostOpponentConnection: () ->
         @stopCountdown()

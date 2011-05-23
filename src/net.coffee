@@ -112,16 +112,16 @@ GameActionMsg.actions =
 
 
 ProtocolMessages[5] = class LobbySetPlayerMsg extends ProtocolMessages
-    constructor: (@list) ->
+    constructor: ({@list}) ->
 
 ProtocolMessages[6] = class LobbyPlayerLeftMsg extends ProtocolMessages
-    constructor: (@name) ->
+    constructor: ({@name}) ->
 
 ProtocolMessages[7] = class LobbyChallengePlayerMsg extends ProtocolMessages
-    constructor: (@name) ->
+    constructor: ({@name}) ->
 
 ProtocolMessages[8] = class LobbyAcceptChallengeMsg extends ProtocolMessages
-    constructor: (@name) ->
+    constructor: ({@name}) ->
 
 for cmdNr, msg of ProtocolMessages
     msg::.__cmd = parseInt(cmdNr)

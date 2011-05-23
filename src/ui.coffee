@@ -76,6 +76,12 @@ class UIField
         @loading = off
         @stoppers = {}
     
+    clearField: () ->
+        @swapped = false
+        for id, piece of @pieces
+            piece.remove()
+        @pieces = {}
+    
     setLobby: (users, mode = 'set') ->
         @lobbyUsers ?= {}
         unless @callbacks
@@ -96,8 +102,6 @@ class UIField
             if length is 0
                 $("ul", lobby).append('<li class="empty">Lobby leer… *hust*</li>')
         else if users.length isnt 0
-            if @lobbyUsers.length is 0 and mode is 'set'
-                @_emptyLobby()
             createButton = (name, status) =>
                 span = (s) -> "<span class=\"buttons\">#{s}</span>"
                 elem = switch status
@@ -127,10 +131,6 @@ class UIField
                 do (li) ->
                     li.slideDown(1000, () -> li.effect('highlight', 1000))
                 @lobbyUsers[name] = buttons
-        else if mode is 'set'
-            @lobbyUsers = {}
-            @_emptyLobby()
-            $("ul", lobby).append('<li class="empty">Lobby leer… *hust*</li>')
         
         @lobbyCallbacks
     
@@ -318,6 +318,7 @@ class UIField
     setGetNickNameActive: (val) -> $('#startButton')[if val then 'show' else 'hide']()
     
     setGameInformation: (info) ->
+        info = {} unless info
         updatePoints = () =>
             max = @gameField.getWinPoints()
             $('#player0Points').text("#{@gameField.getPointsForSide(0)} / #{max}")
@@ -658,6 +659,9 @@ class UIGamingPiece
         for elem, i in elems
             jitterElem elem, (i == l)
         
+    
+    remove: () ->
+        $("#piece-#{@piece.getID()}").remove()
     
     ###
     - private methods

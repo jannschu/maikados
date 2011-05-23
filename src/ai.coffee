@@ -65,8 +65,7 @@ class AIGameLogic extends GameState
             {name} = msg
             if ClientLoginMsg.isValidNickname(name) and @aiPlayer.name isnt name
                 @connection.sendToClient new ResponseCodeMsg(code: ResponseCodeMsg.codes.OK)
-                @connection.sendToClient new ServerGameStartMsg(opponent: @aiPlayer.getName(), side: 1, pieces: @getStartPieces())
-                @connection.sendToClient new ServerGameControlMsg(code: ServerGameControlMsg.codes.ChoosePiece, data: timeForMove / 2)
+                @initGame()
                 return 'waitForPieceChosen'
             else
                 @connection.sendToClient new ResponseCodeMsg(code: ResponseCodeMsg.codes.Illegal)
@@ -112,14 +111,17 @@ class AIGameLogic extends GameState
             if side is 0 # notify client about AI move
                 @connection.sendToClient(new GameActionMsg(action: GameActionMsg.actions.FieldChosen, data: data))
             
-            if nextPiece is false # double block situation
+            if nextPiece is false
                 msg = if side is 0
                     ServerGameControlMsg.codes.YouLost
                 else
                     @aiPlayer.youFailedNotification(@nick) if side is 1
                     ServerGameControlMsg.codes.YouWin
                 @connection.sendToClient new ServerGameControlMsg(code: msg)
-                return 'IDLE'
+                name = @aiPlayer.getName()
+                @connection.sendToClient new LobbySetPlayerMsg(list: [name])
+                @connection.sendToClient new LobbyChallengePlayerMsg(name: name)
+                return 'waitForLobbyAccept'
             else # next player
                 if side is 0
                     fields = @field.getAllowedMovesFor @piece
@@ -133,6 +135,17 @@ class AIGameLogic extends GameState
                         @resumeFSM()
             return 'waitForFieldChosen'
         'waitForFieldChosen'
+    
+    waitForLobbyAccept: (type, msg) ->
+        if type is 'message' and (msg instanceof LobbyChallengePlayerMsg or msg instanceof LobbyAcceptChallengeMsg)
+            {name} = msg
+            if name is @aiPlayer.getName()
+                @initGame()
+                'waitForPieceChosen'
+            else
+                'waitForLobbyAccept'
+        else
+            'waitForLobbyAccept'
     
     getStartPieces: () ->
         pieces = []
@@ -148,6 +161,10 @@ class AIGameLogic extends GameState
             pieces.push (color: b.getColorID(), row: b.getRow(), col: b.getCol(), side: b.getSide(), dragonTeeth: b.getDragonTeeth())
         
         return pieces
+    
+    initGame: () ->
+        @connection.sendToClient new ServerGameStartMsg(opponent: @aiPlayer.getName(), side: 1, pieces: @getStartPieces())
+        @connection.sendToClient new ServerGameControlMsg(code: ServerGameControlMsg.codes.ChoosePiece, data: timeForMove / 2)
 
 class AIPlayer
     

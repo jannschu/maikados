@@ -131,5 +131,6 @@ send_msg(Pid, Msg, Json) ->
     socketio_client:send(Pid, #msg{ content = Content, json = Json }).
 
 is_valid_nick(Nick) ->
-    {ok, Pattern} = re:compile("^[- %a-z0-9_öäüß@.]{1,15}$", [caseless]),
+    % TODO: fix char count
+    {ok, Pattern} = re:compile("^[- %a-z0-9_öäüß@.]{1,30}$", [caseless]),
     re:run(Nick, Pattern, [{capture, none}]) =:= match.

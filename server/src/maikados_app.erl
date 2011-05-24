@@ -30,7 +30,7 @@
 %% @private
 %% --------------------------------------
 start(normal, _StartArgs) ->
-    supervisor:start_link({local, ?MODULE}, ?MODULE, []).
+    supervisor:start_link(?MODULE, []).
 
 %% --------------------------------------
 %% @doc application behaviour callback
@@ -52,12 +52,6 @@ start_link() ->
 %% --------------------------------------
 init(_Args) ->
     Children = [
-        {maikados_game_sup, {maikados_game_sup, start_link, []},
-         permanent, infinity, supervisor, [maikados_game_sup]},
-        {maikados_client_sup, {maikados_client_sup, start_link, []},
-         permanent, infinity, supervisor, [maikados_client_sup]},
-        {maikados_client_listener, {maikados_client_listener, start_link, []},
-         permanent, 5000, worker, [maikados_client_listener]},
         {maikados_players, {maikados_players, start_link, []},
          permanent, 5000, worker, [maikados_players]}
     ],

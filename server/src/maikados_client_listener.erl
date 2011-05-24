@@ -19,76 +19,55 @@
 %% --------------------------------------
 -module(maikados_client_listener).
 
--include_lib("deps/socketio/include/socketio.hrl").
+-include("protocol.hrl").
 
 -behaviour(gen_event).
 -export([init/1, handle_event/2,
     handle_call/2, handle_info/2, code_change/3, terminate/2]).
 
--export([start_link/0, handle_request/3]).
+-export([setup/0, handle_request/3]).
 
 %% --------------------------------------
 %% @doc Starts to listen, registers event callback
 %% @end
 %% --------------------------------------
-start_link() ->
-    Pid = try socketio_listener:start([{http_port, 7878},
-                                         {default_http_handler, ?MODULE}]) of
-        {ok, P} -> P
+setup() ->
+    Pid = try
+        socketio_listener:server(socketio_listener_sup)
     catch
-        error -> socketio_listener:server(socketio_listener_sup)
+        _:_ ->
+            {ok, P} = socketio_listener:start([{http_port, 7878},
+                                             {default_http_handler, ?MODULE}]),
+            P
     end,
     EventMgr = socketio_listener:event_manager(Pid),
-    ok = gen_event:add_handler(EventMgr, ?MODULE, []),
-    {ok, spawn_link(fun() ->
-        process_flag(trap_exit, true),
-        link(Pid),
-        receive
-            {'EXIT', Pid, _Reason} ->
-                ok
-        end
-    end)}.
+    case lists:any(fun(H) -> H =:= ?MODULE end, gen_event:which_handlers(EventMgr)) of
+        false ->
+            ok = gen_event:add_handler(EventMgr, ?MODULE, []);
+        _ ->
+            ok
+    end,
+    EventMgr.
 
 %%% ======================================
 %%% gen_event CALLBACKS
 %%% ======================================
 
+-record(state, {players = dict:new()}).
+
 init([]) ->
-    {ok, dict:new()};
+    {ok, #state{}}.
 
-init([Pid]) ->
-    {ok, Pid}.
-
-handle_event({client, Client}, State) ->
-    error_logger:info_msg("New client connected~n"),
-    ClientServer = maikados_client_sup:new_client(Client),
-    NewState = dict:store(Client, ClientServer, State),
-    EventMgr = socketio_client:event_manager(Client),
-    ok = gen_event:add_handler(EventMgr, ?MODULE, [ClientServer]),
+handle_event({client, Client}, #state{players = PlayerList} = State) ->
+    error_logger:info_msg("New client connected: ~p~n", [Client]),
+    PlayerPid = maikados_players:add_player(Client),
+    NewState = State#state{players = dict:store(Client, PlayerPid, PlayerList)},
     {ok, NewState};
 
-handle_event({message, _Client, #msg{ content = Content, json = Json }}, Pid) when Json =:= true ->
-    case maikados_protocol:packet_to_record(Content) of
-        {ok, Record} ->
-            maikados_client:receive_msg(Pid, Record);
-        error ->
-            error_logger:info_msg("Unknown packet received: ~p~n", [Content])
-    end,
-    {ok, Pid};
-
-handle_event({message, _Client, #msg{ content = Content}}, Pid) ->
-    error_logger:info_msg("Plain message received: ~p~n", [Content]),
-    {ok, Pid};
-
-handle_event({disconnect, Client}, State) ->
-    error_logger:info_msg("Client disconnected~n"),
-    case dict:find(Client, State) of
-        {ok, ClientPid} ->
-            maikados_client:stop(ClientPid);
-        error ->
-            ok
-    end,
-    {ok, dict:erase(Client, State)};
+handle_event({disconnect, Client}, #state{players = Players} = State) ->
+    error_logger:info_msg("Client disconnected: ~p~n", [Client]),
+    catch(maikados_player:stop(dict:fetch(Client, Players))),
+    {ok, State#state{players = dict:erase(Client, State#state.players)}};
 
 handle_event(Event, State) ->
     error_logger:info_msg("unhandled EVENT in client_listener: ~p~n", [Event]),
@@ -98,14 +77,14 @@ handle_call(Request, State) ->
     Reply = Request,
     {ok, Reply, State}.
 
-handle_info(_Info, State) ->
+handle_info(_Request, #state{} = State) ->
     {ok, State}.
 
 code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
 
 terminate(_Reason, _State) ->
-    todo.
+    ok.
 
 %%% ======================================
 %%% http handler

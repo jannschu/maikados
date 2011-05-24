@@ -18,71 +18,66 @@
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
     terminate/2, code_change/3]).
 
--export([start_link/0, register_player/2, player_left/1]).
+-export([start_link/0, add_player/1, set_player_name/2]).
 
--record(player, {pid, game = null}).
--record(state, {players = dict:new(), waiting_player = null}).
+-record(state, {players = dict:new(), in_game_players = gb_sets:new(), games = dict:new()}).
+
+-include("protocol.hrl").
 
 start_link() ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
-register_player(Name, Pid) ->
-    gen_server:call(?MODULE, {register, Name, Pid}).
+add_player(Socket) ->
+    gen_server:call(?MODULE, {add_player, Socket}).
 
-player_left(Name) ->
-    gen_server:cast(?MODULE, {player_left, Name}).
+set_player_name(Name, Pid) ->
+    gen_server:call(?MODULE, {set_player_name, Name, Pid}).
 
 %%% ======================================
 %%%     gen_server CALLBACKS
 %%% ======================================
 
 init([]) ->
+    process_flag(trap_exit, true),
+    link(maikados_client_listener:setup()),
     {ok, #state{}}.
 
-handle_call({register, Name, Pid}, _From, #state{players = Dict, waiting_player = WaitingPlayer} = State) ->
-    {Reply, NewDict, NewWaitingPlayer} = case dict:is_key(Name, Dict) of
-        true ->
-            {error, Dict, WaitingPlayer};
-        false ->
-            monitor(process, Pid),
-            DictOrg = dict:store(Name, #player{pid = Pid}, Dict),
-            {WaitingPlayer2, Dict2} = case WaitingPlayer of
-                null ->
-                    {Name, DictOrg};
-                _ ->
-                    GamePid = maikados_game_sup:new_game({(dict:fetch(WaitingPlayer, DictOrg))#player.pid, WaitingPlayer}, {Pid, Name}),
-                    Update = fun(N, D) ->
-                        dict:update(N, fun(P) -> P#player{game = GamePid} end, D)
-                    end,
-                    Dict0 = Update(WaitingPlayer, DictOrg),
-                    Dict1 = Update(Name, Dict0),
-                    {null, Dict1}
-            end,
-            {ok, Dict2, WaitingPlayer2}
-    end,
-    {reply, Reply, State#state{players = NewDict, waiting_player = NewWaitingPlayer}}.
+handle_call({add_player, Socket}, _From, #state{players = Players} = State) ->
+    {ok, PlayerPid} = maikados_player:start_link(Socket),
+    NewPlayers = dict:store(PlayerPid, undefined, Players),
+    {reply, PlayerPid, State#state{players = NewPlayers}};
 
-handle_cast({player_left, Name}, #state{players = Dict, waiting_player = WaitingPlayer} = State) ->
-    NewWaitingPlayer = case WaitingPlayer of
-        Name -> null;
-        _ -> WaitingPlayer
+handle_call({set_player_name, Name, PlayerPid}, _From, #state{players = Players} = State) ->
+    {Reply, NewPlayers} = case dict:find(PlayerPid, Players) of
+        error -> {error, Players};
+        {ok, undefined} ->
+            case dict:to_list(dict:filter(fun(_Pid, NameDict) -> NameDict =:= Name end, Players)) of
+                [] ->
+                    InGame = State#state.in_game_players,
+                    OtherPlayerPids = [Pid || {Pid, OppName} <- dict:to_list(Players),
+                        not gb_sets:is_member(Pid, InGame), OppName =/= undefined],
+                    broadcast_player_joined_lobby(Name, OtherPlayerPids),
+                    OtherPlayerNames = [dict:fetch(Pid, Players) || Pid <- OtherPlayerPids],
+                    send_lobby_memebers_to_player(PlayerPid, OtherPlayerNames),
+                    {ok, dict:store(PlayerPid, Name, Players)};
+                _Any ->
+                    {error, Players}
+            end;
+        {ok, _Any} -> {error, Players} % already name set
     end,
-    case dict:find(Name, Dict) of
-        {ok, #player{game = Game}} when is_pid(Game) ->
-            maikados_game:player_left(Game, Name);
-        _ -> ok
-    end,
-    {noreply, State#state{players = dict:erase(Name, Dict), waiting_player = NewWaitingPlayer}};
+    {reply, Reply, State#state{players = NewPlayers}}.
 
 handle_cast(_Request, State) ->
     {noreply, State}.
 
-handle_info({'DOWN', _MonitorRef, _Type, _Object, Pid}, #state{players = Dict} = State) ->
-    Names = dict:fetch_keys(dict:filter(fun(_Key, Val) ->
-        Val#player.pid =:= Pid
-    end, Dict)),
-    NewDict = lists:foldl(fun(Name, S) -> dict:erase(Name, S) end, Dict, Names),
-    {noreply, State#state{players = NewDict}};
+handle_info({'EXIT', From, _Reason}, #state{players = Players} = State) ->
+    % TODO: implement for games
+    case dict:is_key(From, Players) of
+        true ->
+            {noreply, State#state{players = dict:erase(From, Players)}};
+        false ->
+            {noreply, State}
+    end;
 
 handle_info(_Info, State) ->
     {noreply, State}.
@@ -92,3 +87,16 @@ terminate(_Reason, _State) ->
 
 code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
+
+%%% ======================================
+%%%     HELPERS
+%%% ======================================
+
+broadcast_player_joined_lobby(Name, PlayerPids) ->
+    Message = #lobby_set_player_msg{list = [Name]},
+    [maikados_player:send_client_msg(Pid, Message) || Pid <- PlayerPids].
+
+send_lobby_memebers_to_player(_PlayerPid, []) -> ok;
+send_lobby_memebers_to_player(PlayerPid, Names) ->
+    Message = #lobby_set_player_msg{list = Names},
+    maikados_player:send_client_msg(PlayerPid, Message).

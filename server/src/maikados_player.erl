@@ -17,7 +17,7 @@
 %% @doc Client server
 %% @end
 %% --------------------------------------
--module(maikados_client).
+-module(maikados_player).
 
 -include_lib("deps/socketio/include/socketio.hrl").
 
@@ -65,21 +65,26 @@ send_client_msg(Pid, Msg) ->
 %%% ======================================
 
 init(SocketPid) ->
+    link(SocketPid),
+    EventMgr = socketio_client:event_manager(SocketPid),
+    ok = gen_event:add_handler(EventMgr, maikados_player_events, self()),
     {ok, login, #client{socket = SocketPid}}.
 
-login(#clt_login{name = Name}, State) ->
-    error_logger:info_msg("Login try by player ~p~n", [Name]),
+login(#clt_login{name = Name}, #client{socket = S} = State) ->
     {NextState, NewState} = case is_valid_nick(Name) of
         true ->
-            case maikados_players:register_player(Name, self()) of
+            case maikados_players:set_player_name(Name, self()) of
                 error ->
+                    error_logger:info_msg("Failed login try (name already used) by ~p with ~p~n", [S, Name]),
                     send_msg(State, #response_code_msg{code = ?RESPONSE_CODE_MSG_Illegal}),
                     {login, State};
                 ok ->
+                    error_logger:info_msg("Client ~p logged in with name: ~p~n", [S, Name]),
                     send_msg(State, #response_code_msg{code = ?RESPONSE_CODE_MSG_OK}),
                     {wait_for_game_start, State#client{name = Name}}
             end;
         false ->
+            error_logger:info_msg("Failed login try (illegal name) by ~p with ~p~n", [S, Name]),
             send_msg(State, #response_code_msg{code = ?RESPONSE_CODE_MSG_Illegal}),
             {login, State}
     end,
@@ -117,8 +122,11 @@ handle_info(_Info, StateName, StateData) ->
 code_change(_OldVsn, StateName, State, _Extra) ->
     {ok, StateName, State}.
 
-terminate(_Reason, _StateName, _StateData) ->
-    ok.
+terminate(Reason, _StateName, State) ->
+    if
+        Reason =:= normal -> send_msg(#close_connection_msg{}, State), ok;
+        true -> ok
+    end.
 
 %%% ======================================
 %%%     helper
@@ -128,6 +136,7 @@ send_msg(#client{socket = Pid}, Msg) -> send_msg(Pid, Msg, is_tuple(Msg)).
 
 send_msg(Pid, Msg, Json) ->
     {ok, Content} = maikados_protocol:record_to_packet(Msg),
+    % error_logger:info_msg("Packet sending: ~p~n", [Content]),
     socketio_client:send(Pid, #msg{ content = Content, json = Json }).
 
 is_valid_nick(Nick) ->

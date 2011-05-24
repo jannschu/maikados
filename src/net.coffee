@@ -26,9 +26,12 @@ class NetConnection
         
         @socket.on 'message', (msg) =>
             return unless (cmd = ProtocolMessages[msg.__cmd])
-            result = new cmd(msg)
-            for obj in @callbacks.msg
-                obj(result)
+            if cmd instanceof CloseConnectionMessage
+                @socket.close()
+            else
+                result = new cmd(msg)
+                for obj in @callbacks.msg
+                    obj(result)
         
         @socket.on 'connect', () =>
             for obj in @callbacks.connection
@@ -128,6 +131,8 @@ ProtocolMessages[7] = class LobbyChallengePlayerMsg extends ProtocolMessages
 
 ProtocolMessages[8] = class LobbyAcceptChallengeMsg extends ProtocolMessages
     constructor: ({name: name}) -> @name = @encode(name)
+
+ProtocolMessages[9] = class CloseConnectionMessage extends ProtocolMessages
 
 for cmdNr, msg of ProtocolMessages
     msg::.__cmd = parseInt(cmdNr)

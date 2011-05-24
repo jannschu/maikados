@@ -48,6 +48,8 @@
 -record(lobby_challenge_player_msg, {name}). % 7
 -record(lobby_accept_challege_msg, {name}). % 8
 
+-record(close_connection_msg, {}).
+
 -define(MOVE_TIME, 60). % in seconds
 
 -ifdef(DEFINE_PROTCOL_COMMAND_FUNCTIONS).
@@ -61,6 +63,7 @@ cmd2nr(lobby_set_player_msg) -> {ok, 5};
 cmd2nr(lobby_player_left_msg) -> {ok, 6};
 cmd2nr(lobby_challenge_player_msg) -> {ok, 7};
 cmd2nr(lobby_accept_challege_msg) -> {ok, 8};
+cmd2nr(close_connection_msg) -> {ok, 9};
 cmd2nr(_) -> error.
 
 nr2cmd(0) -> {ok, clt_login};
@@ -72,6 +75,7 @@ nr2cmd(5) -> {ok, lobby_set_player_msg};
 nr2cmd(6) -> {ok, lobby_player_left_msg};
 nr2cmd(7) -> {ok, lobby_challenge_player_msg};
 nr2cmd(8) -> {ok, lobby_accept_challege_msg};
+nr2cmd(9) -> {ok, close_connection_msg};
 nr2cmd(_) -> error.
 
 cmd_fields(clt_login) -> {ok, [name]};
@@ -83,6 +87,7 @@ cmd_fields(lobby_set_player_msg) -> {ok, [list]};
 cmd_fields(lobby_player_left_msg) -> {ok, [name]};
 cmd_fields(lobby_challenge_player_msg) -> {ok, [name]};
 cmd_fields(lobby_accept_challege_msg) -> {ok, [name]};
+cmd_fields(close_connection_msg) -> {ok, []};
 cmd_fields(_) -> error.
 
 -endif.

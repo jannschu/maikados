@@ -58,7 +58,7 @@ class UIField
         for name, data of signs
             [path, attrs] = data
             (new Raphael('uiElements', 30, 30)).path(path).attr(attrs)
-            $("#uiElements svg:first").attr(id: "svg-#{name}")
+            $('#uiElements svg:first').attr(id: "svg-#{name}")
         
         $('#nicknameErrorMsg').prepend($('#svg-warn'))
         
@@ -90,7 +90,7 @@ class UIField
         
         lobby = $('#lobby').show()
         if mode is 'init' and users.length is 0
-            $("ul", lobby).append('<li class="empty">Lobby leer… *hust*</li>')
+            $('ul', lobby).append('<li class="empty">Lobby leer… *hust*</li>')
         if mode is 'del'
             for name in users
                 continue unless button = @lobbyUsers[name]
@@ -102,8 +102,9 @@ class UIField
             for _, _ of @lobbyUsers
                 ++length
             if length is 0
-                $("ul", lobby).append('<li class="empty">Lobby leer… *hust*</li>')
+                $('ul', lobby).append('<li class="empty">Lobby leer… *hust*</li>')
         else if users.length isnt 0
+            $('li.empty', lobby).remove()
             createButton = (name, status) =>
                 span = (s) -> "<span class=\"buttons\">#{s}</span>"
                 elem = switch status
@@ -122,7 +123,7 @@ class UIField
                 buttons = @lobbyUsers[name]
                 if buttons
                     continue if buttons.status == status
-                    $("a", buttons).unbind 'click'
+                    $('a', buttons).unbind 'click'
                     newButtons = createButton(name, status)
                     buttons.replaceWith(newButtons)
                     buttons = newButtons
@@ -139,13 +140,13 @@ class UIField
     clearLobby: () ->
         delete @lobbyUsers
         delete @lobbyCallbacks
-        $("#lobby").hide()
+        $('#lobby').hide()
         @_emptyLobby()
     
     _emptyLobby: () ->
-        lobby = $("#lobby")
-        $("a", lobby).unbind('click')
-        $("li", lobby).remove()
+        lobby = $('#lobby')
+        $('a', lobby).unbind('click')
+        $('li', lobby).remove()
     
     getFieldSize: () ->
         @fieldSize
@@ -211,9 +212,9 @@ class UIField
         if value != @loading
             @loading = value
             if value
-                $("*").addClass 'wait-cursor'
+                $('*').addClass 'wait-cursor'
             else
-                $("*").removeClass 'wait-cursor'
+                $('*').removeClass 'wait-cursor'
     
     getNickName: (testCallback) ->
         $('#startButton').click () =>
@@ -423,13 +424,13 @@ class UIField
                     @backgroundPieces[row][col] = @backgroundPieces[7 - row][7 - col]
                     @backgroundPieces[7 - row][7 - col] = me
                 attr =
-                    "50%" : (x: (7 - col) * @fieldSize + 1, rotation: 45)
-                    "100%": (y: (7 - row) * @fieldSize + 1, rotation: 0)
+                    '50%' : (x: (7 - col) * @fieldSize + 1, rotation: 45)
+                    '100%': (y: (7 - row) * @fieldSize + 1, rotation: 0)
                 if animationObj
                    me.animateWith animationObj, attr, time
                 else
                     animationObj = me
-                    attr["100%"].callback = callback if callback
+                    attr['100%'].callback = callback if callback
                     me.animate attr, time
     
     _drawProgressBar: () ->
@@ -499,14 +500,14 @@ class UIGamingPiece
         getAnimAttr = (obj, opc) ->
             fll = obj.attr 'fill'
             animAttr = 
-                "10%": (opacity: 0, fill: 'none')
-                "90%": (callback: () -> obj.translate(dx, dy))
-                "100%": (opacity: opc, fill: fll)
+                '10%': (opacity: 0, fill: 'none')
+                '90%': (callback: () -> obj.translate(dx, dy))
+                '100%': (opacity: opc, fill: fll)
         
         getNoAnimAttr = (obj) ->
             attrs =
-                "0%": (callback: () -> obj.attr(opacity: 0).translate(dx, dy))
-                "100%": (callback: () -> obj.attr opacity: 1)
+                '0%': (callback: () -> obj.attr(opacity: 0).translate(dx, dy))
+                '100%': (callback: () -> obj.attr opacity: 1)
         
         animElems = [
             ( # the shadow
@@ -576,7 +577,7 @@ class UIGamingPiece
         
         toFront = (group) ->
             
-        (group = $("#piece-#{@piece.getID()}")).parent("svg").append(group)
+        (group = $("#piece-#{@piece.getID()}")).parent('svg').append(group)
         for {elem, attr} in animElems
             if withObj
                 elem.animateWith withObj, attr, time
@@ -631,7 +632,7 @@ class UIGamingPiece
                 for el, i in @dragonToothPieces[n]
                     if n is current - 1 && i is 7
                         attrs.callback = if diff is 0 then callback else addCallback
-                    el.animate(("80%": attrs), time)
+                    el.animate(('80%': attrs), time)
     
     animateBlocked: (callback) ->
         duration = 2000
@@ -679,9 +680,9 @@ class UIGamingPiece
         paper = @field.paper
         
         # create a new SVG group for this piece
-        svgns = "http://www.w3.org/2000/svg"
-        group = document.createElementNS(svgns, "g")
-        group.id = "piece-" + @piece.getID()
+        svgns = 'http://www.w3.org/2000/svg'
+        group = document.createElementNS(svgns, 'g')
+        group.id = 'piece-' + @piece.getID()
         paper.canvas.appendChild(group)
         
         set = []

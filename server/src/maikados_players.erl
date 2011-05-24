@@ -71,7 +71,7 @@ handle_cast(_Request, State) ->
     {noreply, State}.
 
 handle_info({'EXIT', From, _Reason}, #state{players = Players} = State) ->
-    % TODO: implement for games
+    % TODO: implement for games, send del msg for lobby
     case dict:is_key(From, Players) of
         true ->
             {noreply, State#state{players = dict:erase(From, Players)}};

@@ -127,6 +127,7 @@ class UIField
                     newButtons = createButton(name, status)
                     buttons.replaceWith(newButtons)
                     buttons = newButtons
+                    li = buttons.parent('li')
                 else
                     buttons = createButton(name, status)
                     li = $('<li><span class="name">' + name + '</span></li>').append(buttons).hide()

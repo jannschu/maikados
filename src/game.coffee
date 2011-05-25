@@ -218,8 +218,8 @@ class MaikadosGame extends GameState
     lostOpponentConnection: () ->
         @stopCountdown()
         @ui.stop()
-        @ui.setStatus "Verbindung zum Gegner verloren"
-        @ui.postNotification "Verbindung zum Gegenspieler verloren", 'warn'
+        @ui.setStatus "Fehler bei Partie aufgetreten"
+        @ui.postNotification "Technischer Fehler in der Partie aufgetreten (Abbruch)", 'warn'
     
     animateMove: (piece, nr, callback) ->
         row = Math.floor(nr / 8)

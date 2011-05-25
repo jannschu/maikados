@@ -11,8 +11,6 @@ UI
   + beim Einfügen/Updaten der Spielsteine umrechnen
   + beim Einlesen von Spielzügen umrechnen
 
-* Neues Match ohne Seite neuladen (s. Server -> Lobby)
-
 * Animation
   + eines Siegs/Niederlage
     Vorschlag: SVG-Symbol einer Strichfigur im Jubel/hängendem Kopf auf
@@ -31,8 +29,6 @@ Server
 ------
 
 * Packete mehr kontrollieren (nicht einfach Daten vertrauen)
-* Lobby bauen
-* Code aufräumen
 
 KI
 --

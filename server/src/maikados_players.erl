@@ -68,7 +68,7 @@ handle_call({set_player_name, Name, PlayerPid}, _From, #state{} = State) ->
             case find_player_by_name(Name) of
                 not_found ->
                     broadcast_player_joined_lobby(Name),
-                    send_lobby_memebers_to_player(PlayerPid),
+                    send_lobby_members_to_player(PlayerPid),
                     ets:insert(players, Player#player{name = Name}),
                     ok;
                 _Any ->
@@ -125,12 +125,20 @@ handle_info({'EXIT', From, _Reason}, #state{} = State) ->
                 [#game{playerA = PidA, playerB = PidB}] ->
                     ets:delete(games, From),
                     % doing it with dead players does not hurt xD
-                    ets:update_element(players, PidA, {#player.game, undefined}),
-                    ets:update_element(players, PidB, {#player.game, undefined}),
                     maikados_player:return_to_lobby(PidA),
                     maikados_player:return_to_lobby(PidB),
-                    send_lobby_memebers_to_player(PidA),
-                    send_lobby_memebers_to_player(PidB)
+                    send_lobby_members_to_player(PidA),
+                    send_lobby_members_to_player(PidB),
+                    ets:update_element(players, PidA, {#player.game, undefined}),
+                    ets:update_element(players, PidB, {#player.game, undefined}),
+                    case ets:lookup(players, PidA) of
+                        [#player{name = NameA}] -> broadcast_player_joined_lobby(NameA);
+                        [] -> ok
+                    end,
+                    case ets:lookup(players, PidB) of
+                        [#player{name = NameB}] -> broadcast_player_joined_lobby(NameB);
+                        [] -> ok
+                    end
             end
     end,
     {noreply, State};
@@ -162,11 +170,12 @@ broadcast_player_left_lobby(Name) ->
 broadcast_player_joined_lobby(Name) ->
     send_msg_to_all_players(#lobby_set_player_msg{list = [Name]}, Name).
 
-send_lobby_memebers_to_player(PlayerPid) ->
+send_lobby_members_to_player(PlayerPid) -> send_lobby_members_to_player(PlayerPid, []).
+send_lobby_members_to_player(PlayerPid, Blacklist) ->
     MS = ets:fun2ms(fun(#player{pid = P, game = undefined, name = N, _ = '_'})
             when N =/= undefined, P =/= PlayerPid -> N end),
     Names = ets:select(players, MS),
-    Message = #lobby_set_player_msg{list = Names},
+    Message = #lobby_set_player_msg{list = lists:filter(fun(P) -> not lists:member(P, Blacklist) end, Names)},
     maikados_player:send_client_msg(PlayerPid, Message).
 
 find_player_by_name(Name) ->

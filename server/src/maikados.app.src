@@ -10,7 +10,7 @@
     maikados_players,
     maikados_player,
     maikados_player_events,
-    maikados_protocol,
+    maikados_protocol
   ]},
   {registered, []},
   {applications, [kernel, stdlib, socketio]},

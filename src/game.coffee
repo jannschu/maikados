@@ -40,6 +40,7 @@ class MaikadosGame extends GameState
             @sendEvent 'message', msg
         
         @connection.onFailure () =>
+            @connection.close()
             @ui.postNotification 'Verbindungsfehler', 'warn'
         
         @connection.connect()
@@ -208,7 +209,9 @@ class MaikadosGame extends GameState
         @ui.setStatus 'Lobby'
         @ui.setGameInformation(null)
         callback = @ui.setLobby([], 'init')
-        callback.onRequestChallenge = (name) => @connection.send new LobbyChallengePlayerMsg(name: name)
+        callback.onRequestChallenge = (name) =>
+            @ui.setLobby([{name: name, status: 'waitForAnswer'}])
+            @connection.send new LobbyChallengePlayerMsg(name: name)
         callback.onStartChallenge = (name) => @connection.send new LobbyAcceptChallengeMsg(name: name)
         return this
     

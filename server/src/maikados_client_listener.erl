@@ -59,18 +59,18 @@ init([]) ->
     {ok, #state{}}.
 
 handle_event({client, Client}, #state{players = PlayerList} = State) ->
-    error_logger:info_msg("New client connected: ~p~n", [Client]),
+    error_logger:info_msg("New client connected: ~p", [Client]),
     PlayerPid = maikados_players:add_player(Client),
     NewState = State#state{players = dict:store(Client, PlayerPid, PlayerList)},
     {ok, NewState};
 
 handle_event({disconnect, Client}, #state{players = Players} = State) ->
-    error_logger:info_msg("Client disconnected: ~p~n", [Client]),
+    error_logger:info_msg("Client disconnected: ~p", [Client]),
     catch(maikados_player:stop(dict:fetch(Client, Players))),
     {ok, State#state{players = dict:erase(Client, State#state.players)}};
 
 handle_event(Event, State) ->
-    error_logger:info_msg("unhandled EVENT in client_listener: ~p~n", [Event]),
+    error_logger:info_msg("unhandled EVENT in client_listener: ~p", [Event]),
     {ok, State}.
 
 handle_call(Request, State) ->
@@ -106,7 +106,7 @@ handle_request(_Method, Path, Req) ->
                     Req:respond(404)
             end;
         false ->
-            error_logger:info_msg("Forbidden file requested: ~p~n", [Path]),
+            error_logger:info_msg("Forbidden file requested: ~p", [Path]),
             Req:respond(403)
     end.
 

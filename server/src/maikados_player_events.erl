@@ -17,16 +17,16 @@ handle_event({message, _Client, #msg{ content = Content, json = Json }}, Pid) wh
         {ok, Record} ->
             maikados_player:receive_msg(Pid, Record);
         error ->
-            error_logger:info_msg("Unknown packet received: ~p~n", [Content])
+            error_logger:info_msg("Unknown packet received: ~p", [Content])
     end,
     {ok, Pid};
 
 handle_event({message, _Client, #msg{ content = Content}}, Pid) ->
-    error_logger:warning_msg("Plain message received: ~p~n", [Content]),
+    error_logger:warning_msg("Plain message received: ~p", [Content]),
     {ok, Pid};
 
 handle_event(Event, State) ->
-    error_logger:info_msg("unhandled EVENT in player_events: ~p~n", [Event]),
+    error_logger:info_msg("unhandled EVENT in player_events: ~p", [Event]),
     {ok, State}.
 
 handle_call(Request, State) ->

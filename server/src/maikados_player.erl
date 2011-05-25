@@ -26,11 +26,9 @@
     handle_sync_event/4, terminate/3,
     login/2, wait_for_game_start/2, forward_messages/2]).
 
--export([start_link/1, receive_msg/2, stop/1, send_client_msg/2]).
+-export([start_link/1, receive_msg/2, stop/1, send_client_msg/2, return_to_lobby/1]).
 
 -include("protocol.hrl").
-
--record(client, {socket, name, game, side}).
 
 %% --------------------------------------
 %% @doc starts gen_fsm
@@ -58,11 +56,16 @@ receive_msg(Pid, Msg) ->
 %% @end
 %% --------------------------------------
 send_client_msg(Pid, Msg) ->
-    gen_fsm:send_all_state_event(Pid, {send, Msg}).
+    catch(gen_fsm:send_all_state_event(Pid, {send, Msg})).
+
+return_to_lobby(Pid) ->
+    catch(gen_fsm:send_all_state_event(Pid, back_to_lobby)).
 
 %%% ======================================
 %%%     gen_fsm
 %%% ======================================
+
+-record(client, {socket, name, game, side}).
 
 init(SocketPid) ->
     link(SocketPid),
@@ -75,30 +78,40 @@ login(#clt_login{name = Name}, #client{socket = S} = State) ->
         true ->
             case maikados_players:set_player_name(Name, self()) of
                 error ->
-                    error_logger:info_msg("Failed login try (name already used) by ~p with ~p~n", [S, Name]),
+                    error_logger:info_msg("Failed login try (name already used) by ~p with ~p", [S, Name]),
                     send_msg(State, #response_code_msg{code = ?RESPONSE_CODE_MSG_Illegal}),
                     {login, State};
                 ok ->
-                    error_logger:info_msg("Client ~p logged in with name: ~p~n", [S, Name]),
+                    error_logger:info_msg("Client ~p logged in with name: ~p", [S, Name]),
                     send_msg(State, #response_code_msg{code = ?RESPONSE_CODE_MSG_OK}),
                     {wait_for_game_start, State#client{name = Name}}
             end;
         false ->
-            error_logger:info_msg("Failed login try (illegal name) by ~p with ~p~n", [S, Name]),
+            error_logger:info_msg("Failed login try (illegal name) by ~p with ~p", [S, Name]),
             send_msg(State, #response_code_msg{code = ?RESPONSE_CODE_MSG_Illegal}),
             {login, State}
     end,
     {next_state, NextState, NewState};
 
 login(Msg, State) ->
-    error_logger:info_msg("Got unhandled message in state `login': ~p~n", [Msg]),
+    error_logger:info_msg("Got unhandled message in state `login': ~p", [Msg]),
     {next_state, login, State}.
+
+wait_for_game_start(#lobby_challenge_player_msg{name = OppName}, #client{name = MyName} = State) ->
+    error_logger:info_msg("~p challenges ~p", [MyName, OppName]),
+    maikados_players:challenge_player(MyName, OppName),
+    {next_state, wait_for_game_start, State};
+
+wait_for_game_start(#lobby_accept_challege_msg{name = OppName}, #client{name = MyName} = State) ->
+    error_logger:info_msg("~p accepts challenge from ~p", [MyName, OppName]),
+    maikados_players:accept_challenge(MyName, OppName),
+    {next_state, wait_for_game_start, State};
 
 wait_for_game_start({game_start, Side, Game}, State) ->
     {next_state, forward_messages, State#client{game = Game, side = Side}};
 
 wait_for_game_start(Msg, State) ->
-    error_logger:info_msg("Got unhandled message in state `wait_for_game_start': ~p~n", [Msg]),
+    error_logger:info_msg("Got unhandled message in state `wait_for_game_start': ~p", [Msg]),
     {next_state, wait_for_game_start, State}.
 
 forward_messages(Msg, #client{game = G, side = S} = State) ->
@@ -108,6 +121,9 @@ forward_messages(Msg, #client{game = G, side = S} = State) ->
 handle_event({send, Msg}, StateName, State) ->
     send_msg(State, Msg),
     {next_state, StateName, State};
+
+handle_event(back_to_lobby, _StateName, State) ->
+    {next_state, wait_for_game_start, State};
 
 handle_event(stop, _StateName, State) ->
     maikados_players:player_left(State#client.name),
@@ -136,7 +152,7 @@ send_msg(#client{socket = Pid}, Msg) -> send_msg(Pid, Msg, is_tuple(Msg)).
 
 send_msg(Pid, Msg, Json) ->
     {ok, Content} = maikados_protocol:record_to_packet(Msg),
-    % error_logger:info_msg("Packet sending: ~p~n", [Content]),
+    % error_logger:info_msg("Packet sending: ~p", [Content]),
     socketio_client:send(Pid, #msg{ content = Content, json = Json }).
 
 is_valid_nick(Nick) ->

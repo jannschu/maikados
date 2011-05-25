@@ -18,9 +18,9 @@
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
     terminate/2, code_change/3]).
 
--export([start_link/0, add_player/1, set_player_name/2]).
+-export([start_link/0, add_player/1, set_player_name/2, challenge_player/2, accept_challenge/2]).
 
--record(state, {players = dict:new(), in_game_players = gb_sets:new(), games = dict:new()}).
+-include_lib("stdlib/include/ms_transform.hrl").
 
 -include("protocol.hrl").
 
@@ -33,51 +33,107 @@ add_player(Socket) ->
 set_player_name(Name, Pid) ->
     gen_server:call(?MODULE, {set_player_name, Name, Pid}).
 
+challenge_player(From, To) ->
+    gen_server:cast(?MODULE, {challenge_player, From, To}).
+
+accept_challenge(From, Challenger) ->
+    gen_server:cast(?MODULE, {accept_challenge, From, Challenger}).
+
 %%% ======================================
 %%%     gen_server CALLBACKS
 %%% ======================================
 
+-record(state, {}).
+-record(player, {pid, name = undefined, game = undefined, challenges = gb_sets:new()}).
+-record(game, {pid, playerA, playerB}).
+
 init([]) ->
     process_flag(trap_exit, true),
     link(maikados_client_listener:setup()),
+    ets:new(players, [named_table, {keypos, #player.pid}]),
+    ets:new(games, [named_table, {keypos, #game.pid}]),
     {ok, #state{}}.
 
-handle_call({add_player, Socket}, _From, #state{players = Players} = State) ->
+handle_call({add_player, Socket}, _From, #state{} = State) ->
     {ok, PlayerPid} = maikados_player:start_link(Socket),
-    NewPlayers = dict:store(PlayerPid, undefined, Players),
-    {reply, PlayerPid, State#state{players = NewPlayers}};
+    ets:insert(players, #player{pid = PlayerPid}),
+    {reply, PlayerPid, State};
 
-handle_call({set_player_name, Name, PlayerPid}, _From, #state{players = Players} = State) ->
-    {Reply, NewPlayers} = case dict:find(PlayerPid, Players) of
-        error -> {error, Players};
-        {ok, undefined} ->
-            case dict:to_list(dict:filter(fun(_Pid, NameDict) -> NameDict =:= Name end, Players)) of
-                [] ->
-                    InGame = State#state.in_game_players,
-                    OtherPlayerPids = [Pid || {Pid, OppName} <- dict:to_list(Players),
-                        not gb_sets:is_member(Pid, InGame), OppName =/= undefined],
-                    broadcast_player_joined_lobby(Name, OtherPlayerPids),
-                    OtherPlayerNames = [dict:fetch(Pid, Players) || Pid <- OtherPlayerPids],
-                    send_lobby_memebers_to_player(PlayerPid, OtherPlayerNames),
-                    {ok, dict:store(PlayerPid, Name, Players)};
+handle_call({set_player_name, Name, PlayerPid}, _From, #state{} = State) ->
+    % whats the status of the player?
+    Reply = case ets:lookup(players, PlayerPid) of
+        [] -> error;
+        [#player{name = undefined} = Player] ->
+            % does name already exist?
+            case find_player_by_name(Name) of
+                not_found ->
+                    broadcast_player_joined_lobby(Name),
+                    send_lobby_memebers_to_player(PlayerPid),
+                    ets:insert(players, Player#player{name = Name}),
+                    ok;
                 _Any ->
-                    {error, Players}
+                    error
             end;
-        {ok, _Any} -> {error, Players} % already name set
+        [_Any] -> error % already name set
     end,
-    {reply, Reply, State#state{players = NewPlayers}}.
+    {reply, Reply, State}.
 
-handle_cast(_Request, State) ->
+handle_cast({challenge_player, FromName, ToName}, #state{} = State) ->
+    case {find_player_by_name(FromName), find_player_by_name(ToName)} of
+        {FromPlayer, ToPlayer} when FromPlayer =:= not_found; ToPlayer =:= not_found ->
+            ok;
+        {#player{pid = FromPid, challenges = FromsChallengesList} = From,
+         #player{pid = ToPid, challenges = TosChallengesList} = To} ->
+            % does To already challenge From?
+            case gb_sets:is_member(FromPid, TosChallengesList) of
+                true ->
+                    start_game(From, To);
+                false ->
+                    NewList = gb_sets:add_element(ToPid, FromsChallengesList),
+                    ets:insert(players, From#player{challenges = NewList}),
+                    maikados_player:send_client_msg(ToPid, #lobby_challenge_player_msg{name = FromName})
+            end
+    end,
+    {noreply, State};
+
+handle_cast({accept_challenge, FromName, ChallengerName}, #state{} = State) ->
+    case {find_player_by_name(FromName), find_player_by_name(ChallengerName)} of
+        {FromPlayer, ChallPlayer} when FromPlayer =:= not_found; ChallPlayer =:= not_found ->
+            ok;
+        {#player{pid = FromPid} = FromPlayer,
+         #player{challenges = ChallChallengesList} = ChallPlayer} ->
+            case gb_sets:is_member(FromPid, ChallChallengesList) of
+                false -> ok;
+                true -> start_game(FromPlayer, ChallPlayer)
+            end
+    end,
     {noreply, State}.
 
-handle_info({'EXIT', From, _Reason}, #state{players = Players} = State) ->
-    % TODO: implement for games, send del msg for lobby
-    case dict:is_key(From, Players) of
-        true ->
-            {noreply, State#state{players = dict:erase(From, Players)}};
-        false ->
-            {noreply, State}
-    end;
+-define(IF(Cond, Body), if Cond -> Body; true -> ok end).
+
+handle_info({'EXIT', From, _Reason}, #state{} = State) ->
+    case ets:lookup(players, From) of
+        [#player{name = Name, game = GamePid}] ->
+            ets:delete(players, From),
+            if
+                GamePid =:= undefined -> broadcast_player_left_lobby(Name);
+                true -> ok % will be handled when game process crashes
+            end;
+        [] ->
+            case ets:lookup(games, From) of
+                [] -> ok;
+                [#game{playerA = PidA, playerB = PidB}] ->
+                    ets:delete(games, From),
+                    % doing it with dead players does not hurt xD
+                    ets:update_element(players, PidA, {#player.game, undefined}),
+                    ets:update_element(players, PidB, {#player.game, undefined}),
+                    maikados_player:return_to_lobby(PidA),
+                    maikados_player:return_to_lobby(PidB),
+                    send_lobby_memebers_to_player(PidA),
+                    send_lobby_memebers_to_player(PidB)
+            end
+    end,
+    {noreply, State};
 
 handle_info(_Info, State) ->
     {noreply, State}.
@@ -92,11 +148,35 @@ code_change(_OldVsn, State, _Extra) ->
 %%%     HELPERS
 %%% ======================================
 
-broadcast_player_joined_lobby(Name, PlayerPids) ->
-    Message = #lobby_set_player_msg{list = [Name]},
-    [maikados_player:send_client_msg(Pid, Message) || Pid <- PlayerPids].
+start_game(#player{pid = PidA, name = NameA} = A, #player{pid = PidB, name = NameB} = B) ->
+    {ok, GamePid} = maikados_game:start_link({PidA, NameA}, {PidB, NameB}),
+    ets:insert(games, #game{pid = GamePid, playerA = PidA, playerB = PidB}),
+    ets:insert(players, A#player{game = GamePid, challenges = gb_sets:new()}),
+    ets:insert(players, B#player{game = GamePid, challenges = gb_sets:new()}),
+    broadcast_player_left_lobby(NameA),
+    broadcast_player_left_lobby(NameB).
 
-send_lobby_memebers_to_player(_PlayerPid, []) -> ok;
-send_lobby_memebers_to_player(PlayerPid, Names) ->
+broadcast_player_left_lobby(Name) ->
+    send_msg_to_all_players(#lobby_player_left_msg{name = Name}, Name).
+
+broadcast_player_joined_lobby(Name) ->
+    send_msg_to_all_players(#lobby_set_player_msg{list = [Name]}, Name).
+
+send_lobby_memebers_to_player(PlayerPid) ->
+    MS = ets:fun2ms(fun(#player{pid = P, game = undefined, name = N, _ = '_'})
+            when N =/= undefined, P =/= PlayerPid -> N end),
+    Names = ets:select(players, MS),
     Message = #lobby_set_player_msg{list = Names},
     maikados_player:send_client_msg(PlayerPid, Message).
+
+find_player_by_name(Name) ->
+    case ets:match_object(players, #player{name = Name, _ = '_'}) of
+        [#player{} = Player] -> Player;
+        [] -> not_found
+    end.
+
+send_msg_to_all_players(Message, BlackListName) ->
+    MS = ets:fun2ms(fun(#player{pid = P, game = undefined, name = N, _ = '_'})
+            when N =/= undefined, N =/= BlackListName -> P end),
+    PlayerPids = ets:select(players, MS),
+    [maikados_player:send_client_msg(Pid, Message) || Pid <- PlayerPids].

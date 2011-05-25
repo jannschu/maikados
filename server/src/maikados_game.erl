@@ -52,14 +52,14 @@ msg(Pid, Side, Msg) ->
 init([{Pid0, Player0}, {Pid1, Player1}]) ->
     Field = maikados_field:create(),
     InitPieces = maikados_field:get_field_msg(Field),
-    maikados_client:send_client_msg(Pid0, #srv_game_start_msg{opponent = Player1, side = 0, pieces = InitPieces}),
-    maikados_client:send_client_msg(Pid0, #srv_game_ctrl_msg{code = ?SRV_GAME_CTRL_MSG_ChoosePiece, data = ?MOVE_TIME / 2}),
+    maikados_player:send_client_msg(Pid0, #srv_game_start_msg{opponent = Player1, side = 0, pieces = InitPieces}),
+    maikados_player:send_client_msg(Pid0, #srv_game_ctrl_msg{code = ?SRV_GAME_CTRL_MSG_ChoosePiece, data = ?MOVE_TIME / 2}),
     
-    maikados_client:send_client_msg(Pid1, #srv_game_start_msg{opponent = Player0, side = 1, pieces = InitPieces}),
-    maikados_client:send_client_msg(Pid1, #srv_game_ctrl_msg{code = ?SRV_GAME_CTRL_MSG_WaitForOpponent, data = [?MOVE_TIME / 2, null]}),
+    maikados_player:send_client_msg(Pid1, #srv_game_start_msg{opponent = Player0, side = 1, pieces = InitPieces}),
+    maikados_player:send_client_msg(Pid1, #srv_game_ctrl_msg{code = ?SRV_GAME_CTRL_MSG_WaitForOpponent, data = [?MOVE_TIME / 2, null]}),
     
-    maikados_client:receive_msg(Pid0, {game_start, 0, self()}),
-    maikados_client:receive_msg(Pid1, {game_start, 1, self()}),
+    maikados_player:receive_msg(Pid0, {game_start, 0, self()}),
+    maikados_player:receive_msg(Pid1, {game_start, 1, self()}),
     
     {ok, wait_for_game_action, #state{
         pid0 = Pid0, name0 = Player0,
@@ -72,14 +72,14 @@ wait_for_game_action({Player, #game_action_msg{action = ?GAME_ACTION_MSG_PieceCh
     PieceID = piece_id(PiecePair),
     Fields = maikados_field:get_moves_for(Field, PiecePair),
     ChoseFieldMsg = #srv_game_ctrl_msg{code = ?SRV_GAME_CTRL_MSG_ChooseField, data = [PieceID, Fields, ?MOVE_TIME]},
-    maikados_client:send_client_msg(get_pid_for_player(Player, State), ChoseFieldMsg),
-    maikados_client:send_client_msg(get_pid_for_player(1 - Player, State), #srv_game_ctrl_msg{code = ?SRV_GAME_CTRL_MSG_WaitForOpponent, data = [?MOVE_TIME, PieceID]}),
+    maikados_player:send_client_msg(get_pid_for_player(Player, State), ChoseFieldMsg),
+    maikados_player:send_client_msg(get_pid_for_player(1 - Player, State), #srv_game_ctrl_msg{code = ?SRV_GAME_CTRL_MSG_WaitForOpponent, data = [?MOVE_TIME, PieceID]}),
     {next_state, wait_for_game_action, NewState};
 
 wait_for_game_action(
         {Player, #game_action_msg{action = ?GAME_ACTION_MSG_FieldChosen, data = Field} = Msg},
         #state{piece = Piece, player = Player, field = GameField} = State) when Piece =/= chose ->
-    maikados_client:send_client_msg(get_pid_for_player(1 - Player, State), Msg),
+    maikados_player:send_client_msg(get_pid_for_player(1 - Player, State), Msg),
     State2 = if
         Field =/= null ->
             GameField1 = maikados_field:move_piece(GameField, Piece, Field),
@@ -101,8 +101,8 @@ wait_for_game_action(
                 State2#state.blockedMoves =:= 2 -> {1 - Player, Player};
                 true -> {Player, 1 - Player}
             end,
-            maikados_client:send_client_msg(get_pid_for_player(A, State), #srv_game_ctrl_msg{code = ?SRV_GAME_CTRL_MSG_YouWin}),
-            maikados_client:send_client_msg(get_pid_for_player(B, State), #srv_game_ctrl_msg{code = ?SRV_GAME_CTRL_MSG_YouLost}),
+            maikados_player:send_client_msg(get_pid_for_player(A, State), #srv_game_ctrl_msg{code = ?SRV_GAME_CTRL_MSG_YouWin}),
+            maikados_player:send_client_msg(get_pid_for_player(B, State), #srv_game_ctrl_msg{code = ?SRV_GAME_CTRL_MSG_YouLost}),
             {stop, normal, State2};
         true ->
             NextColor = if
@@ -114,20 +114,17 @@ wait_for_game_action(
             State3 = State2#state{player = 1 - Player, piece = NextPiece},
             PieceID = piece_id(NextPiece),
             ChoseFieldMsg = #srv_game_ctrl_msg{code = ?SRV_GAME_CTRL_MSG_ChooseField, data = [PieceID, Fields, ?MOVE_TIME]},
-            maikados_client:send_client_msg(get_pid_for_player(1 - Player, State), ChoseFieldMsg),
-            maikados_client:send_client_msg(get_pid_for_player(Player, State), #srv_game_ctrl_msg{code = ?SRV_GAME_CTRL_MSG_WaitForOpponent, data = [?MOVE_TIME, PieceID]}),
+            maikados_player:send_client_msg(get_pid_for_player(1 - Player, State), ChoseFieldMsg),
+            maikados_player:send_client_msg(get_pid_for_player(Player, State), #srv_game_ctrl_msg{code = ?SRV_GAME_CTRL_MSG_WaitForOpponent, data = [?MOVE_TIME, PieceID]}),
             {next_state, wait_for_game_action, State3}
     end;
 
 wait_for_game_action(Any, State) ->
-    error_logger:warning_msg("Unexpected msg in game: ~p~n", [Any]),
+    error_logger:warning_msg("Unexpected msg in game: ~p", [Any]),
     {next_state, wait_for_game_action, State}.
 
 handle_event({player_left, _Name}, _StateName, State) ->
-    Msg = #srv_game_ctrl_msg{code = ?SRV_GAME_CTRL_MSG_LostOpponentConnection},
-    catch(maikados_client:send_client_msg(State#state.pid0, Msg)),
-    catch(maikados_client:send_client_msg(State#state.pid1, Msg)),
-    {stop, normal, State};
+    {stop, player_left, State};
 
 handle_event(stop, _StateName, State) ->
     {stop, normal, State}.
@@ -141,9 +138,13 @@ handle_info(_Info, StateName, StateData) ->
 code_change(_OldVsn, StateName, State, _Extra) ->
     {ok, StateName, State}.
 
-terminate(_Reason, _StateName, _StateData) ->
-    % TODO: send crash notice
-    ok.
+terminate(normal, _StateName, _StateData) -> ok;
+terminate(shutdown, _StateName, _StateData) -> ok;
+
+terminate(_Reason, _StateName, State) ->
+    Msg = #srv_game_ctrl_msg{code = ?SRV_GAME_CTRL_MSG_LostOpponentConnection},
+    maikados_player:send_client_msg(State#state.pid0, Msg),
+    maikados_player:send_client_msg(State#state.pid1, Msg).
 
 get_pid_for_player(0, #state{pid0 = P}) -> P;
 get_pid_for_player(1, #state{pid1 = P}) -> P.

@@ -47,6 +47,9 @@ class NetConnection
     connect: () ->
         @socket.connect()
     
+    close: () ->
+        @socket.close()
+    
     onMessage: (callback) ->
         @callbacks.msg.push callback
     
@@ -85,7 +88,6 @@ class ProtocolMessage
     decodeFromJSONObject: () ->
         for name, value of this
             if @hasOwnProperty(name) and name.toString()[0] isnt '_'
-                console.log name, value
                 this[name] = traverseObject(value, decodeURIComponent)
     
 

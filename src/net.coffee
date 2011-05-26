@@ -18,7 +18,7 @@
 class NetConnection
 
     constructor: () ->
-        @socket = new io.Socket()
+        @socket = new io.Socket(undefined, (reconnect: false))
         @callbacks =
             msg: []
             failure: []
@@ -48,7 +48,8 @@ class NetConnection
         @socket.connect()
     
     close: () ->
-        @socket.close()
+        @callbacks.failure = []
+        @socket.disconnect()
     
     onMessage: (callback) ->
         @callbacks.msg.push callback

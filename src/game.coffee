@@ -42,7 +42,7 @@ class MaikadosGame extends GameState
         @connection.onFailure () =>
             @connection.close()
             @ui.postNotification 'Verbindungsfehler', 'warn'
-        
+        $(window).unload(() => @connection.close())
         @connection.connect()
     
     ###
@@ -259,5 +259,6 @@ class MaikadosGame extends GameState
         delete @countdownVal
 
 $( ->
+    `WEB_SOCKET_SWF_LOCATION = '/lib/socket.io/lib/vendor/web-socket-js/WebSocketMain.swf';`
     field = new GameField()
     new MaikadosGame(new UIField('game', field), field))

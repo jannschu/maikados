@@ -66,7 +66,7 @@ handle_event({client, Client}, #state{players = PlayerList} = State) ->
 
 handle_event({disconnect, Client}, #state{players = Players} = State) ->
     error_logger:info_msg("Client disconnected: ~p", [Client]),
-    catch(maikados_player:stop(dict:fetch(Client, Players))),
+    maikados_player:stop(dict:fetch(Client, Players)),
     {ok, State#state{players = dict:erase(Client, State#state.players)}};
 
 handle_event(Event, State) ->

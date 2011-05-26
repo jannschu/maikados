@@ -19,7 +19,7 @@
     handle_sync_event/4, terminate/3,
     wait_for_game_action/2]).
 
--export([start_link/2, msg/3, player_left/2, stop/1]).
+-export([start_link/2, msg/3, stop/1]).
 
 -include("protocol.hrl").
 
@@ -37,9 +37,6 @@ start_link(Player0, Player1) ->
 stop(Pid) ->
     gen_fsm:send_all_state_event(Pid, stop).
 
-player_left(Pid, Name) ->
-    gen_fsm:send_all_state_event(Pid, {player_left, Name}).
-
 msg(Pid, Side, Msg) ->
     gen_fsm:send_event(Pid, {Side, Msg}).
 
@@ -50,6 +47,8 @@ msg(Pid, Side, Msg) ->
 -record(state, {pid0, name0, pid1, name1, piece = chose, player = 0, blockedMoves = 0, field}).
 
 init([{Pid0, Player0}, {Pid1, Player1}]) ->
+    monitor(process, Pid0),
+    monitor(process, Pid1),
     Field = maikados_field:create(),
     InitPieces = maikados_field:get_field_msg(Field),
     maikados_player:send_client_msg(Pid0, #srv_game_start_msg{opponent = Player1, side = 0, pieces = InitPieces}),
@@ -123,14 +122,14 @@ wait_for_game_action(Any, State) ->
     error_logger:warning_msg("Unexpected msg in game: ~p", [Any]),
     {next_state, wait_for_game_action, State}.
 
-handle_event({player_left, _Name}, _StateName, State) ->
-    {stop, player_left, State};
-
 handle_event(stop, _StateName, State) ->
     {stop, normal, State}.
 
 handle_sync_event(_Event, _From, StateName, StateData) ->
     {next_state, StateName, StateData}.
+
+handle_info({'DOWN', _MonitorRef, _Type, _Object, _Info}, _StateName, State) ->
+    {stop, {shutdown, player_left}, State};
 
 handle_info(_Info, StateName, StateData) ->
     {next_state, StateName, StateData}.
@@ -139,9 +138,8 @@ code_change(_OldVsn, StateName, State, _Extra) ->
     {ok, StateName, State}.
 
 terminate(normal, _StateName, _StateData) -> ok;
-terminate(shutdown, _StateName, _StateData) -> ok;
 
-terminate(_Reason, _StateName, State) ->
+terminate({shutdown, player_left}, _StateName, State) ->
     Msg = #srv_game_ctrl_msg{code = ?SRV_GAME_CTRL_MSG_LostOpponentConnection},
     maikados_player:send_client_msg(State#state.pid0, Msg),
     maikados_player:send_client_msg(State#state.pid1, Msg).

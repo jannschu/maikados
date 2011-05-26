@@ -126,7 +126,6 @@ handle_event(back_to_lobby, _StateName, State) ->
     {next_state, wait_for_game_start, State};
 
 handle_event(stop, _StateName, State) ->
-    maikados_players:player_left(State#client.name),
     {stop, normal, State}.
 
 handle_sync_event(_Event, _From, StateName, StateData) ->

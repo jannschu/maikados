@@ -25,7 +25,7 @@
 -export([init/1, handle_event/2,
     handle_call/2, handle_info/2, code_change/3, terminate/2]).
 
--export([setup/0, handle_request/3]).
+-export([setup/0, setdown/0, handle_request/3]).
 
 %% --------------------------------------
 %% @doc Starts to listen, registers event callback
@@ -40,6 +40,7 @@ setup() ->
                                              {default_http_handler, ?MODULE}]),
             P
     end,
+    link(Pid),
     EventMgr = socketio_listener:event_manager(Pid),
     case lists:any(fun(H) -> H =:= ?MODULE end, gen_event:which_handlers(EventMgr)) of
         false ->
@@ -48,6 +49,15 @@ setup() ->
             ok
     end,
     EventMgr.
+
+setdown() ->
+    try
+        Pid = socketio_listener:server(socketio_listener_sup),
+        EventMgr = socketio_listener:event_manager(Pid),
+        [gen_event:delete_handler(Ref) || Ref <- gen_event:which_handlers(EventMgr)]
+    catch
+        _:_ -> ok
+    end.
 
 %%% ======================================
 %%% gen_event CALLBACKS
@@ -99,7 +109,7 @@ handle_request(_Method, Path, Req) ->
     case is_valid_path(Path) of
         {true, File} ->
             FilePath = "../" ++ File,
-            case filelib:is_file(FilePath) of
+            case filelib:is_regular(FilePath) of
                 true ->
                     Req:file(FilePath);
                 false ->

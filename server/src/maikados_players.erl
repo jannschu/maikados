@@ -147,6 +147,7 @@ handle_info(_Info, State) ->
     {noreply, State}.
 
 terminate(_Reason, _State) ->
+    maikados_client_listener:setdown(),
     ok.
 
 code_change(_OldVsn, State, _Extra) ->

@@ -113,7 +113,7 @@ a:hover { color: #FFC699; }
 #status:before { content: "<"; font-size: 0.8em; vertical-align: top; margin-right: 4px; color: #CBCBCB; }
 #status:after { content: ">"; font-size: 0.8em; vertical-align: top; margin-left: 4px; color: #CBCBCB; }
 
-#startButton { display: block; margin: auto; }
+#startButtonP { text-align: center; }
 
 #lobby { display: none; }
 

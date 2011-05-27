@@ -18,7 +18,7 @@
 class NetConnection
 
     constructor: () ->
-        @socket = new io.Socket(undefined, (reconnect: false, transports: ['websocket', 'flashsocket']))
+        @socket = new io.Socket(undefined, (reconnect: false))
         @callbacks =
             msg: []
             failure: []

@@ -71,6 +71,7 @@ class MaikadosGame extends GameState
             @ui.clearLobby()
             @ui.clearField()
             {opponent, side, pieces} = msg
+            @ui.setSwapMode side is 0
             @opponent = opponent
             @side = side
             for {color, row, col, side, dragonTeeth} in pieces

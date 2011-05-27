@@ -7,10 +7,6 @@ HINWEIS: Beim Benutzen von Plugins immer schauen ob es (Github) Git-Repo gibt
 UI
 --
 
-* Swap mode komplett implementieren (Spieler Schwarz bekommt Spielfeld gedreht)
-  + beim Einfügen/Updaten der Spielsteine umrechnen
-  + beim Einlesen von Spielzügen umrechnen
-
 * Animation
   + eines Siegs/Niederlage
     Vorschlag: SVG-Symbol einer Strichfigur im Jubel/hängendem Kopf auf
@@ -22,8 +18,6 @@ Spielablauf
 ------------------
 
 * Alle Spielmodi implementieren
-
-* Handling von Disconnects / Verbinndung allgemein verbessern bzw. überarbeiten
 
 Server
 ------

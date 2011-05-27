@@ -205,9 +205,11 @@ class UIField
             else
                 ball.animate(('r': 0), 300)
     
-    swap: (callback) ->
-        @_swapBackground(callback)
-        @_swapPieces()
+    setSwapMode: (to) ->
+        @swapped = !!to
+        # for animation see history
+        for pieceID, piece of @pieces
+            piece.fieldSwappedNotice()
     
     setLoading: (value) ->
         if value != @loading
@@ -270,8 +272,10 @@ class UIField
         for piece in validPieces
             do (piece) =>
                 {row, col} = @pieces[piece]
+                if @swapped
+                    row = 7 - row
+                    col = 7 - col
                 fields.push(row * 8 + col)
-                
                 el = $("#piece-#{piece}").add(@backgroundPieces[row][col].node)
                 elements.push(el)
                 el.hover((() => b.addClass('pointer-cursor') unless @loading),
@@ -291,10 +295,8 @@ class UIField
                 tile.unbind('click').unbind('mouseenter').unbind('mouseleave')
             @_highlightFields [0..63]
             @_highlightFields [], true
-        
+        validFields = (63 - x for x in validFields) if @swapped
         for field in validFields
-            if @swapped
-                field = 63-field
             row = Math.floor field / 8
             col = field - row * 8
             do (field) =>
@@ -304,12 +306,13 @@ class UIField
                 clickableBackgroundPieces.push(elem)
                 $(elem).click( () =>
                     @stop()
+                    field = 63 - field if @swapped
                     window.setTimeout (() -> callback(field)), 0 if callback
                 ).hover((() => b.addClass('pointer-cursor') unless @loading),
                         (() -> b.removeClass('pointer-cursor')))
         nr = (p = @gameField.getGamingPiece(pieceID)).getRow() * 8 + p.getCol()
         list = [0..63]
-        list.splice(nr, 1)
+        list.splice((if @swapped then 63 - nr else nr), 1)
         @_highlightFields list
         @_highlightFields validFields, true
     
@@ -323,11 +326,11 @@ class UIField
     
     setGameInformation: (info) ->
         info = {} unless info
+        [a, b] = if @swapped then [1, 0] else [0, 1]
         updatePoints = () =>
             max = @gameField.getWinPoints()
-            $('#player0Points').text("#{@gameField.getPointsForSide(0)} / #{max}")
-            $('#player1Points').text("#{@gameField.getPointsForSide(1)} / #{max}")
-        
+            $('#player0Points').text("#{@gameField.getPointsForSide(a)} / #{max}")
+            $('#player1Points').text("#{@gameField.getPointsForSide(b)} / #{max}")
         if info is 'update'
             updatePoints()
         else
@@ -338,31 +341,12 @@ class UIField
             else
                 (e = $('#gameInformation')).show()
                 updatePoints()
-                $('#player0Name').text(player0Name) if player0Name
-                $('#player1Name').text(player1Name) if player1Name
+                $("#player#{a}Name").text(player0Name) if player0Name
+                $("#player#{b}Name").text(player1Name) if player1Name
     
     ###
     - private methods
     ###
-    
-    _registerHoverFun: () ->
-        registerHoverFor = (ui, piece, nr) ->
-            fields = []
-            row = Math.floor(nr / 8)
-            col = nr - row * 8
-            color = UI.fieldRows[row][col]
-            for x in [0..7]
-                for y in [0..7]
-                    fields.push y * 8 + x if UI.fieldRows[y][x] is color
-            over = () ->
-                ui._highlightFields fields
-            out = () ->
-                ui._highlightFields [0..63]
-            piece.hover over, out
-        
-        for x in [0..7]
-            for y in [0..7]
-                registerHoverFor this, @backgroundPieces[y][x], y * 8 + x
     
     _highlightFields: (fields, rings = false) ->
         @_highlightRings ?= {}
@@ -413,27 +397,6 @@ class UIField
                 piece.stop()
                 piece.animate(attrs, 300)
     
-    _swapBackground: (callback) ->
-        animationObj = null
-        time = UI.swapTime
-        @swapped = !@swapped
-        
-        for row in [0..7]
-            for col in [0..7]
-                me = @backgroundPieces[row][col]
-                if row > 3
-                    @backgroundPieces[row][col] = @backgroundPieces[7 - row][7 - col]
-                    @backgroundPieces[7 - row][7 - col] = me
-                attr =
-                    '50%' : (x: (7 - col) * @fieldSize + 1, rotation: 45)
-                    '100%': (y: (7 - row) * @fieldSize + 1, rotation: 0)
-                if animationObj
-                   me.animateWith animationObj, attr, time
-                else
-                    animationObj = me
-                    attr['100%'].callback = callback if callback
-                    me.animate attr, time
-    
     _drawProgressBar: () ->
         width = @progressBar.width
         r = @progressBar.height / 2
@@ -456,17 +419,12 @@ class UIField
                 rect = @paper.rect(@fieldSize * col + 1, @fieldSize * rowNr + 1, @fieldSize, @fieldSize, 5)
                 rect.attr fill: UI.colorMap[colorIndex]
                 @backgroundPieces[rowNr][col] = rect
-    
-    _swapPieces: () ->
-        for pieceID, piece of @pieces
-            piece.swap()
 
 class UIGamingPiece
     
     bg = ['#1B1B1B', '#EEE']
     
     constructor: (@piece, @field) ->
-        @swapped = false
         @row = @piece.getRow()
         @col = @piece.getCol()
         
@@ -478,65 +436,10 @@ class UIGamingPiece
     
     getPiece: () -> @piece
     
-    swap: () ->
-        time = UI.swapTime
-        
-        fieldSize = @field.getFieldSize()
-        paper = @field.paper
-        
-        if @swapped
-            oldCol = 7 - @col
-            oldRow = 7 - @row
-        else
-            oldCol = @col
-            oldRow = @row
-        
-        @swapped = !@swapped
-        
-        dx = (7 - 2 * oldCol) * fieldSize
-        dy = (7 - 2 * oldRow) * fieldSize
-        
-        id = "#{@piece.getID()}"
-        
-        getAnimAttr = (obj, opc) ->
-            fll = obj.attr 'fill'
-            animAttr = 
-                '10%': (opacity: 0, fill: 'none')
-                '90%': (callback: () -> obj.translate(dx, dy))
-                '100%': (opacity: opc, fill: fll)
-        
-        getNoAnimAttr = (obj) ->
-            attrs =
-                '0%': (callback: () -> obj.attr(opacity: 0).translate(dx, dy))
-                '100%': (callback: () -> obj.attr opacity: 1)
-        
-        animElems = [
-            ( # the shadow
-                elem: @set[0]
-                attr: getAnimAttr(@set[0], 0)),
-            ( # the top circle
-                elem: @set[1]
-                attr: getAnimAttr(@set[1], 1))
-            ( # the color sign
-                elem: @set[2]
-                attr: getNoAnimAttr(@set[2]))
-                    
-        ]
-        
-        for tooth in @dragonToothPieces
-            for n in tooth
-                animElems.push(
-                    elem: n
-                    attr: getNoAnimAttr(n))
-        
-        for {elem, attr} in animElems
-            if withObj
-                elem.animateWith withObj, attr, time
-            else
-                elem.animate attr, time
-                withObj = elem
+    fieldSwappedNotice: () ->
+        # for animation see history
+        @_setCenterPositions()
     
-    # TODO: create _move() function which does ONLY does the animation etc. so we can use that in swap() and move()
     move: (callback) -> # uses post-swap positions (i.e. gfx positions, not the "true" ones)
         fieldSize = @field.getFieldSize()
         paper = @field.paper
@@ -544,15 +447,17 @@ class UIGamingPiece
         oldCol = @col
         oldRow = @row
         
-        if @swapped
-            @col = 7 - @piece.getCol()
-            @row = 7 - @piece.getRow()
-        else
-            @col = @piece.getCol()
-            @row = @piece.getRow()
+        @col = col = @piece.getCol()
+        @row = row = @piece.getRow()
         
-        dx = (@col - oldCol) * fieldSize
-        dy = (@row - oldRow) * fieldSize
+        if @_swapped()
+            oldCol = 7 - oldCol
+            oldRow = 7 - oldRow
+            col = 7 - col
+            row = 7 - row
+        
+        dx = (col - oldCol) * fieldSize
+        dy = (row - oldRow) * fieldSize
         
         time = 1000 * Math.sqrt(dx * dx + dy * dy) / 180 # distance / speed
         
@@ -673,8 +578,14 @@ class UIGamingPiece
     
     _setCenterPositions: () ->
         fieldSize = @field.getFieldSize()
-        @cx = fieldSize * (@col + 0.5) + 1
-        @cy = fieldSize * (@row + 0.5) + 1
+        if @_swapped()
+            col = 7 - @col
+            row = 7 - @row
+        else
+            col = @col
+            row = @row
+        @cx = fieldSize * (col + 0.5) + 1
+        @cy = fieldSize * (row + 0.5) + 1
     
     _drawPiece: () ->
         fieldSize = @field.getFieldSize()
@@ -732,6 +643,8 @@ class UIGamingPiece
             dragonToothPiece.push el
             group.append(el)
         @dragonToothPieces.push dragonToothPiece
+    
+    _swapped: () -> @field.swapped
     
     _fitPathInto: (path, cx0, cy0, width0, height0 = width0) ->
         

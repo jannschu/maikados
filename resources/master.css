@@ -176,8 +176,8 @@ footer a { color: #7E4301; }
 }
 
 #getPlayerName label[for=nickname]:after { content: ":"; }
-#getPlayerName label[for=ai]:after { content: ":"; }
-#getPlayerName label[for=ai] {
+#getPlayerName label#aiLabel:after { content: ":"; }
+#getPlayerName label#aiLabel {
     display: block;
     margin: 1em auto 0.5em;
     font-size: 1.2em;

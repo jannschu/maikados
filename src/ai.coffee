@@ -344,8 +344,8 @@ class AIPlayer
                 console.debug(moveResult.total)
                 #alert(moveResult.best.score)
                 #alert(moveResult.worst.score)
-                if moveResult.best.move == moveResult.worst.move
-                    alert("shit")
+                #if moveResult.best.move == moveResult.worst.move
+                #    alert("shit")
                 window.setTimeout (() -> callback(moveResult.best.move))
             else
                 window.setTimeout (() -> calc()), 0

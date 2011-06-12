@@ -58,7 +58,6 @@ init([]) ->
 
 handle_event({client, Client}, #state{players = PlayerList} = State) ->
     error_logger:info_msg("New client connected: ~p", [Client]),
-    true = Client, % error -> crash :)
     PlayerPid = maikados_players:add_player(Client),
     NewState = State#state{players = dict:store(Client, PlayerPid, PlayerList)},
     {ok, NewState};

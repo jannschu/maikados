@@ -32,27 +32,15 @@
 %% @end
 %% --------------------------------------
 setup() ->
-    Pid = try
-        socketio_listener:server(socketio_listener_sup)
-    catch
-        _:_ ->
-            {ok, P} = socketio_listener:start([{http_port, 7878},
-                                             {default_http_handler, ?MODULE}]),
-            P
-    end,
+    {ok, Pid} = socketio_listener:start([{http_port, 7878},
+                                         {default_http_handler, ?MODULE}]),
     link(Pid),
     EventMgr = socketio_listener:event_manager(Pid),
-    case lists:any(fun(H) -> H =:= ?MODULE end, gen_event:which_handlers(EventMgr)) of
-        false ->
-            ok = gen_event:add_handler(EventMgr, ?MODULE, []);
-        _ ->
-            ok
-    end,
-    EventMgr.
+    ok = gen_event:add_sup_handler(EventMgr, ?MODULE, []).
 
 setdown() ->
     try
-        Pid = socketio_listener:server(socketio_listener_sup),
+        {ok, Pid} = socketio_listener:server(socketio_listener_sup),
         EventMgr = socketio_listener:event_manager(Pid),
         [gen_event:delete_handler(Ref) || Ref <- gen_event:which_handlers(EventMgr)]
     catch
@@ -70,6 +58,7 @@ init([]) ->
 
 handle_event({client, Client}, #state{players = PlayerList} = State) ->
     error_logger:info_msg("New client connected: ~p", [Client]),
+    true = Client, % error -> crash :)
     PlayerPid = maikados_players:add_player(Client),
     NewState = State#state{players = dict:store(Client, PlayerPid, PlayerList)},
     {ok, NewState};

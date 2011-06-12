@@ -49,7 +49,7 @@ accept_challenge(From, Challenger) ->
 
 init([]) ->
     process_flag(trap_exit, true),
-    link(maikados_client_listener:setup()),
+    maikados_client_listener:setup(),
     ets:new(players, [named_table, {keypos, #player.pid}]),
     ets:new(games, [named_table, {keypos, #game.pid}]),
     {ok, #state{}}.
@@ -142,6 +142,9 @@ handle_info({'EXIT', From, _Reason}, #state{} = State) ->
             end
     end,
     {noreply, State};
+
+handle_info({gen_event_EXIT, _Handler, _Reason}, State) ->
+    {stop, shutdown, State};
 
 handle_info(_Info, State) ->
     {noreply, State}.

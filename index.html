@@ -80,13 +80,15 @@
         
         <div id="uiElements" style="display: none">
             <div id="getPlayerName">
-                <p id="nicknameErrorMsg"><span class="msg"></span></p>
-                <label for="nickname">Und bitte</label>
-                <input type="text" value="" id="nickname">
-                <label id="aiLabel">Der gewünschte Gegner</label>
-                <label><input type="radio" name="ai" value="yes" checked> Computer</label>
-                <label><input type="radio" name="ai" value="no"> Mensch</label>
-                <button id="chooseNickname">Abschicken</button>
+				<form name="getPlayerNameForm" id="getPlayerNameForm" autocomplete="off">
+	                <p id="nicknameErrorMsg"><span class="msg"></span></p>
+	                <label for="nickname">Und bitte</label>
+	                <input type="text" value="" id="nickname">
+	                <label id="aiLabel">Der gewünschte Gegner</label>
+	                <label><input type="radio" name="ai" value="yes" checked> Computer</label>
+	                <label><input type="radio" name="ai" value="no"> Mensch</label>
+	                <button id="chooseNickname">Abschicken</button>
+				</form>
             </div>
         </div>
     </body>

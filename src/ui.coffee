@@ -244,6 +244,7 @@ class UIField
                         nick = $('#nickname').val()
                         ai = $('#getPlayerName input[name=ai]:checked').val() is 'yes'
                         testCallback(nick, ai, (ok: ok, getNew: getNew))
+                        return false
                     $('#chooseNickname').click(event))
             )
     

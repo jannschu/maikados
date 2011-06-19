@@ -18,7 +18,10 @@
 class NetConnection
 
     constructor: () ->
-        @socket = new io.Socket(undefined, (reconnect: false))
+        opts = (reconnect: false)
+        if $.browser.mozilla # hangs first time otherwise
+            opts.transports = ['xhr-multipart', 'xhr-polling', 'jsonp-polling']
+        @socket = new io.Socket(undefined, opts)
         @callbacks =
             msg: []
             failure: []

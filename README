@@ -1,8 +1,8 @@
 How to build (client)
 =====================
 
-You need CoffeScript (tested with 1.0.1).
-Run `cake get-deps' and `cake build' after cloning the repo. 
+You need CoffeScript (tested with 1.1.1).
+Run `cake build' after cloning the repo. 
 
 Now open the `index.html' to see the client.
 

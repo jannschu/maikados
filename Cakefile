@@ -68,7 +68,3 @@ task 'autobuild', 'Watches for file changes and runs the build task', ->
 
 task 'uglify', 'Compresses JavaScript using UglifyJS', ->
     exec 'uglifyjs -o resources/maikados.js resources/maikados.js'
-
-task 'get-deps', 'Loads all dependencies', ->
-    exec 'git submodule init', () ->
-        exec 'git submodule update'

@@ -1,9 +1,0 @@
-[submodule "lib/socket.io"]
-	path = lib/socket.io
-	url = git://github.com/LearnBoost/Socket.IO.git
-[submodule "lib/raphael"]
-	path = lib/raphael
-	url = git@github.com:jannschu/raphael.git
-[submodule "lib/gritter"]
-	path = lib/gritter
-	url = git://github.com/jboesch/Gritter.git

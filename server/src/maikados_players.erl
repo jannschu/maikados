@@ -116,7 +116,8 @@ handle_info({'EXIT', From, _Reason}, #state{} = State) ->
         [#player{name = Name, game = GamePid}] ->
             ets:delete(players, From),
             if
-                GamePid =:= undefined -> broadcast_player_left_lobby(Name);
+                GamePid =:= undefined andalso Name =/= undefined ->
+                    broadcast_player_left_lobby(Name);
                 true -> ok % will be handled when game process crashes
             end;
         [] ->

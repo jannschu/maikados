@@ -21,8 +21,16 @@ class GameState
         @_currentState = initState
         @_paused = false
         @_msgStack = []
+        @_specialHandlers = []
     
     sendEvent: (type, msg) ->
+        speciallyHandled = false
+        for [pred, handler] in @_specialHandlers
+            if pred(type, msg)
+                speciallyHandled = true
+                if (newState = handler(type, msg)) isnt undefined
+                    @_currentState = newState
+        return if speciallyHandled
         if @_paused
             @_msgStack.push [type, msg]
         else
@@ -35,6 +43,9 @@ class GameState
     
     pauseFSM: () ->
         @_paused = true
+    
+    registerSpecialMessageHandler: (pred, handler) ->
+        @_specialHandlers.push [pred, handler]
     
     resumeFSM: () ->
         @_paused = false

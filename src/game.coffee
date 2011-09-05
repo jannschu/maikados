@@ -20,6 +20,20 @@ class MaikadosGame extends GameState
     constructor: (@ui, @field) ->
         super 'waitForNickResponse'
         
+        @registerSpecialMessageHandler(
+            ((type, msg) ->
+                type is 'message' and msg instanceof ServerGameControlMsg and
+                msg.code is ServerGameControlMsg.codes.LostOpponentConnection),
+            ((type, msg) =>
+                console.log(msg)
+                @stopCountdown()
+                @ui.stop()
+                @ui.setStatus "Fehler bei Partie aufgetreten"
+                @ui.postNotification "Technischer Fehler in der Partie aufgetreten (Abbruch)", 'warn'
+                @setupLobby()
+                'waitForGameStart')
+        )
+        
         @loggedIn = false
         @ui.getNickName (nick, ai, handling) =>
             if @loggedIn
@@ -114,10 +128,6 @@ class MaikadosGame extends GameState
                         return 'waitForGameAction'
                     else
                         return 'waitForGameControl' # player chose piece
-                when ServerGameControlMsg.codes.LostOpponentConnection
-                    @lostOpponentConnection()
-                    @setupLobby()
-                    return 'waitForGameStart'
                 when ServerGameControlMsg.codes.ChoosePiece
                     @ui.setStatus "Stein auswählen bitte…"
                     sendSelection = (piece) =>
@@ -195,11 +205,6 @@ class MaikadosGame extends GameState
                         else
                             @animateMove(@currentPiece, data, () => @resumeFSM())
                         return 'waitForGameControl'
-            else if msg instanceof ServerGameControlMsg
-                if msg.code is ServerGameControlMsg.codes.LostOpponentConnection
-                    @lostOpponentConnection()
-                    @setupLobby()
-                    return 'waitForGameStart'
         'waitForGameAction'
     
     ###
@@ -215,12 +220,6 @@ class MaikadosGame extends GameState
             @connection.send new LobbyChallengePlayerMsg(name: name)
         callback.onStartChallenge = (name) => @connection.send new LobbyAcceptChallengeMsg(name: name)
         return this
-    
-    lostOpponentConnection: () ->
-        @stopCountdown()
-        @ui.stop()
-        @ui.setStatus "Fehler bei Partie aufgetreten"
-        @ui.postNotification "Technischer Fehler in der Partie aufgetreten (Abbruch)", 'warn'
     
     animateMove: (piece, nr, callback) ->
         row = Math.floor(nr / 8)

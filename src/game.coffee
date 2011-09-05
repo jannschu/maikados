@@ -118,7 +118,7 @@ class MaikadosGame extends GameState
         if type is 'message' and msg instanceof ServerGameControlMsg
             switch msg.code
                 when ServerGameControlMsg.codes.WaitForOpponent
-                    @stopCountdown
+                    @stopCountdown()
                     {data} = msg
                     [time, piece] = data
                     @setCountdown time

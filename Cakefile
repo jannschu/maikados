@@ -67,4 +67,4 @@ task 'autobuild', 'Watches for file changes and runs the build task', ->
                 build()
 
 task 'uglify', 'Compresses JavaScript using UglifyJS', ->
-    exec 'uglifyjs -o resources/maikados.js resources/maikados.js'
+    exec 'uglifyjs -mt --lift-vars --unsafe -o resources/maikados.js resources/maikados.js'
